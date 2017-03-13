@@ -2,8 +2,7 @@ g_player = {}
 
 local sti = require "lib/sti"
 local gamera = require 'lib/gamera'
-local SIN_45 = math.sin(math.deg(45))
-local Entity = require 'managers/entity-manager'
+local Entity = require 'src/managers/entity-manager'
 local Vec2 = require 'lib/vec2'
 
 function love.load()
@@ -32,6 +31,7 @@ function love.draw()
     for _, entity in ipairs(Entity.entities) do
       entity:draw()
     end
+    Entity.drawCollision()
   end)
   love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end

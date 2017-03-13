@@ -12,46 +12,43 @@ local function enemyThink(self)
   if self.state.current == 'hurt' or self.state.current =='melee' or self.state.current== 'stun' then return end
   local dx, dy = self.transform.position.x - g_player.center.x, self.transform.position.y - g_player.center.y
   if dx * dx + dy * dy < 700* 700 then
-    self.velocity.frictionless.magnitude = 50
     if math.abs(dx) > math.abs(dy) then
       if dx <= 0 then
-        self.velocity.frictionless.direction = Vec2(1, 0)
+        self.velocity = Vec2(self.speed, 0)
         self.transform.forward = Vec2(1, 0)
       else
-        self.velocity.frictionless.direction = Vec2(-1, 0)
+        self.velocity= Vec2(-self.speed, 0)
         self.transform.forward = Vec2(-1, 0)
       end
     else
       if dy <= 0 then
-        self.velocity.frictionless.direction = Vec2(0, 1)
+        self.velocity = Vec2(0, self.speed)
         self.transform.forward = Vec2(0, 1)
       else
-        self.velocity.frictionless.direction = Vec2(0, -1)
+        self.velocity = Vec2(0, -self.speed)
         self.transform.forward = Vec2(0, -1)
       end
     end
   else
-    self.velocity.frictionless.magnitude = 0
+    self.velocity.x, self.velocity.y = 0, 0
   end
 end
 
 
 local function onCollision(self, other, type)
   if type then
-    self.velocity.frictionless.magnitude = 0
+    self.velocity = Vec2(0, 0)
     if type == 'bumper' then
       self.ai.timer = 0.1
       self.state.current = 'bump'
-      self.velocity.magnitude = 250
-      self.velocity.direction = -self.transform.forward:clone()
-      other.velocity.magnitude = 250
-      other.velocity.direction = self.transform.forward:clone()
+      self.velocity = -self.transform.forward:normalize() * 250
+      other.velocity = self.transform.forward:normalize() * 250
     else
       local info = other.body.response_info
       self.ai.timer = 0.2
       self.state.current = 'bump'
       self.health, self.stamina = self.health - info.damage, self.stamina - info.stamina_damage
-      self.velocity.magnitude, self.velocity.direction = info.knockback, other.transform.forward:clone()
+      self.velocity = other.transform.forward:normalize() * info.knockback
     end
   end
 end
@@ -89,12 +86,7 @@ function Enemy.new(args)
       },
 
   }
-  entity.velocity = {
-    frictionless = {
-      magnitude = 0,
-      direction = Vec2(0, 0)
-    }
-  }
+  entity.velocity = Vec2(0, 0)
   entity.state = {
     current = 'idle'
   }
@@ -108,6 +100,7 @@ function Enemy.new(args)
   entity.active = true
   entity.draw = draw
   entity.onCollision = onCollision
+  entity.speed = 50
   return entity
 end
 

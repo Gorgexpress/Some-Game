@@ -1,6 +1,5 @@
 local Bump = require 'lib/bump'
 local vec2 = require 'lib/vec2'
-local FRICTION = 1500
 
 
 local VelocitySystem = {}
@@ -13,13 +12,8 @@ function VelocitySystem.update(entities, num_entities, dt)
     if entity.velocity and entity.transform then 
       local entity = entities[i]
       local p, v = entity.transform.position, entity.velocity
-      local d = v.frictionless.direction * v.frictionless.magnitude * dt
-      if v.magnitude then
-        d = d + v.direction * v.magnitude * dt 
-        v.magnitude = v.magnitude - FRICTION * dt
-        if v.magnitude <= 0 then v.magnitude = nil end
-      end
-      entity.transform.position = p + d 
+      local dx, dy = v.x * dt, v.y * dt
+      p.x, p.y = p.x + dx, p.y + dy
     end
   end
 end

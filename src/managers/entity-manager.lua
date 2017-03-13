@@ -1,5 +1,5 @@
-local PhysicsSystem = require 'systems/physics-system'
-local VelocitySystem = require 'systems/velocity-system'
+local PhysicsSystem = require 'src/systems/physics-system'
+local VelocitySystem = require 'src/systems/velocity-system'
 local EntityManager = {}
 local m_entities = {}
 local m_size = 0
@@ -8,7 +8,7 @@ local m_capacity = 0
 
 function EntityManager.add(entity, args)
   if type(entity) == 'string' then
-    local name = '/entities/' .. entity
+    local name = 'src/entities/' .. entity
     local class = require(name)
     entity = class.new(args)
   end
@@ -61,6 +61,10 @@ end
 
 function EntityManager.unregisterBody(entity)
   PhysicsSystem.onDestroy(entity)
+end
+
+function EntityManager.drawCollision()
+  PhysicsSystem.drawCollision(m_entities, m_size)
 end
 
 EntityManager.entities = m_entities

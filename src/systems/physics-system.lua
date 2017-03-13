@@ -12,7 +12,7 @@ local function bumpCollision(self, other, normal)
   local s1, s2 = self.body.size, other.body.size
   if normal.y == -1 or normal.y == 1 then
     if f1.y == -f2.y then
-      if self.state.current == 'idle' or (p1.x + s1.x / 2 > p2.x + s2.x / 4 and
+      if self.state == 'idle' or (p1.x + s1.x / 2 > p2.x + s2.x / 4 and
         p1.x + s2.x / 2 < p2.x + s2.x * 0.75) then
         self:onCollision(other, 'bumped')
         other:onCollision(self, 'bumper')
@@ -128,6 +128,47 @@ end
 
 function PhysicsSystem.onDestroy(entity)
   m_physics:remove(entity)
+end
+
+local function getCellRect(world, cx,cy)
+  local cellSize = world.cellSize
+  local l,t = world:toWorld(cx,cy)
+  return l,t,cellSize,cellSize
+end
+
+function PhysicsSystem.drawCollision(entities, num_entities)
+  local cellSize = m_physics.cellSize
+  local font = love.graphics.getFont()
+  local fontHeight = font:getHeight()
+  local topOffset = (cellSize - fontHeight) / 2
+  local r, g, b, a = love.graphics.getColor()
+  for cy, row in pairs(m_physics.rows) do
+    for cx, cell in pairs(row) do
+      local l,t,w,h = getCellRect(m_physics, cx,cy)
+      local intensity = cell.itemCount * 12 + 16
+      love.graphics.setColor(255,255,255,intensity)
+      love.graphics.rectangle('fill', l,t,w,h)
+      love.graphics.setColor(255,255,255, 64)
+      love.graphics.printf(cell.itemCount, l, t+topOffset, cellSize, 'center')
+      love.graphics.setColor(255,255,255,10)
+      love.graphics.rectangle('line', l,t,w,h)
+    end
+  end
+
+  for i=1, num_entities do
+    local entity = entities[i]
+    if entity.body then
+      local p = entity.transform.position
+      local o = entity.body.offset
+      local s = entity.body.size
+      local l, t = (p + o):unpack()
+      love.graphics.setColor(255,0,0,70)
+      love.graphics.rectangle("fill", l, t, s.x, s.y)
+      love.graphics.setColor(255,0,0)
+      love.graphics.rectangle("line", l, t, s.x, s.y)
+    end
+  end
+  love.graphics.setColor(r, g, b, a)
 end
 
 return PhysicsSystem
