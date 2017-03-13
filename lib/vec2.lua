@@ -307,13 +307,6 @@ function vec2.to_string(a)
 	return string.format("(%+0.3f,%+0.3f)", a.x, a.y)
 end
 
-function vec2.toCard(a)
-  if a.x < 0 then return 'w' end
-  if a.x > 0 then return 'e' end
-  if a.y > 0 then return 's' end
-  return 'n'
-end
-
 vec2_mt.__index    = vec2
 vec2_mt.__tostring = vec2.to_string
 

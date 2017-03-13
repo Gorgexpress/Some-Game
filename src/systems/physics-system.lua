@@ -1,11 +1,19 @@
 local Bump = require 'lib/bump'
 local vec2 = require 'lib/vec2'
-local FRICTION = 2000
+local acos = math.acos
+
 
 local m_physics
 
 local PhysicsSystem = {}
 
+--[[
+local function bumpCollision2(self, other, normal)
+  local angle = acos(self.transform.forward.dot(other.transform.forward))
+end
+]]
+
+--TODO move this into player.lua or a utility function.
 local function bumpCollision(self, other, normal)
   local p1, p2 = self.transform.position + self.body.offset, other.transform.position + other.body.offset
   local f1, f2 = self.transform.forward, other.transform.forward
