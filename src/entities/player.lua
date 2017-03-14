@@ -1,3 +1,25 @@
+--[[
+  Code isn't as pretty as I'd like but it works.
+
+  Finding a way to handle player speed and acceleration in a way that feels good
+  was a bit tough. 
+  
+  I tried no acceleration at first, but it makes making small movements tough.
+  One way to handle that would be a walk button, which would work perfectly in something like a shmup.
+  I can see that method being annoying when dealing with the bump system though. Don't want to have to
+  hold the walk button everytime you want to make small movements to align your hitbox the right way.
+  Maybe I'll give no acceleration another chance later in development though.
+
+  Linear interpolation felt nice but definitely doesn't fit the needs of the game. A simple
+  acceleration implementation with a capped speed was floaty.
+
+  I settled on just keeping track of the time spent in the running state, and scaling speed
+  based off the current time elapsed while running and the time it takes to reach max speed.
+  This way, the player is only accelerating when they have just begun to move from the idle state.
+
+]]
+
+
 local Vec2 = require 'lib/vec2'
 local anim8 = require 'lib/anim8'
 local Timer = require 'lib/timer'
@@ -35,6 +57,7 @@ function Player.new(args)
   }
   entity.center = entity.transform.position + entity.body.offset + entity.body.size * 0.5
   entity.velocity = Vec2(0, 0)
+  entity.velocity_dir = Vec2(0, 0)
   entity.animator = {
     animations = {
     idle_u = anim8.newAnimation(grid(2, 3), 1000),
@@ -60,8 +83,12 @@ function Player.new(args)
   }
   entity.sprite = image
   entity.timer = Timer.new()
-  entity.speed = 250
-  entity.acceleration = 1250
+  entity.speed = 0
+  entity.max_speed = 250
+  entity.seconds_to_max_speed = 0.1
+  entity.time_running = 0
+  entity.old_x = 0
+  entity.old_y = 0
   return setmetatable(entity, Player_mt)
 end
 
@@ -91,10 +118,17 @@ function Player.onCollision(self, other, type)
 end
 
 function Player.update(self, dt)
-  self.center = self.transform.position + self.body.offset + self.body.size * 0.5
+  self.center.x = self.transform.position.x + self.body.offset.x + self.body.size.x * 0.5
+  self.center.y = self.transform.position.y + self.body.offset.y + self.body.size.y * 0.5
   self.timer:update(dt)
+  self.old_x, self.old_y = self.transform.position.x + self.body.offset.x, self.transform.position.y + self.body.offset.y
+  if self.state == 'running' and self.time_running < self.seconds_to_max_speed then
+    self.time_running = math.min(self.time_running + dt, self.seconds_to_max_speed)
+    self.speed = self.max_speed * (self.time_running / self.seconds_to_max_speed)
+    self.velocity = self.velocity_dir * self.speed
+  end
   if self.state == 'idle' or self.state == 'running' then
-    self.stamina.current = math.min(self.stamina.current + STAMINA_REGEN * dt, self.stamina.max)
+    self.stamina.current = math.min(self.stamina.current + STAMINA_REGEN* dt, self.stamina.max)
   end
 end
 
@@ -104,12 +138,21 @@ function Player.move(self, dir_x, dir_y)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
       self.state = 'idle'
       self.velocity = Vec2(0, 0)
+      self.time_running = 0
     else 
       if dir_x == 0 or dir_y == 0 then
-        self.velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
+        --self.velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
+        self.velocity_dir = Vec2(dir_x, dir_y)
         self.transform.forward.x, self.transform.forward.y = dir_x, dir_y
+        if self.time_running == self.seconds_to_max_speed then
+          self.velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
+        end
       else
-        self.velocity = Vec2(self.speed * SIN45 * dir_x, self.speed * SIN45 * dir_y)
+        --self.velocity = Vec2(self.speed * SIN45 * dir_x, self.speed * SIN45 * dir_y)
+        self.velocity_dir = Vec2(SIN45 * dir_x, SIN45 * dir_y)
+        if self.time_running == self.seconds_to_max_speed then
+          self.velocity = Vec2(SIN45 * self.speed * dir_x, SIN45 * self.speed * dir_y)
+        end
       end
       self.animator.current = self.animator.animations['running_' .. vecToDir(self.transform.forward)]
       if self.state == 'idle' then 

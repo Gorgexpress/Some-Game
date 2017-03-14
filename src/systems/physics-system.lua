@@ -23,12 +23,14 @@ Case 3: For head on collision, the player must 'clip' the side of the other enti
 of both entities are too close, the player is the one that gets attacked.
 
 This code is a mess, but it works so I haven't bothered changing it. The way it is now is pretty efficient,
-but this method will rarely be called so that's not an issue. One way to clean up the code would be to 
-compute the dot product of the two entities' direction normals. Head on collision will only occur if the
-result is -1. The current method assumes movement in only 4 directions, but the dot product would make it
-easy to apply to any arbitrary angles. 
+but this method will rarely be called so that's not an issue.
+
+Another way to do this could be using angles and trajectories.
+Could grab forward+middle point of player and compare with either
+forward+middle of the enemy, or the touch variable from bump.
+
 ]]
-local function bumpCollision(self, other, normal)
+local function bumpCollision(self, other, normal, touch)
   --player always loses if idle
   if self.state == 'idle' then
     self:onCollision(other, 'bumped')
@@ -38,6 +40,8 @@ local function bumpCollision(self, other, normal)
   local p1, p2 = self.transform.position + self.body.offset, other.transform.position + other.body.offset
   local f1, f2 = self.transform.forward, other.transform.forward
   local s1, s2 = self.body.size, other.body.size
+  local angle = math.atan2(touch.y - self.old_y, touch.x - self.old_x)
+  --print(math.deg(angle))
   local depth_hit = 16
   if normal.y == -1 or normal.y == 1 then
     if f1.y == -f2.y then
@@ -143,9 +147,9 @@ function PhysicsSystem.update(entities, num_entities, dt)
           if not ignore[col.other] then ignore[col.other] = {} end
           ignore[col.other][entity] = true
           if entity.body.type == 'player' and col.other.body.type == 'bump' then
-            bumpCollision(entity, col.other, col.normal)
+            bumpCollision(entity, col.other, col.normal, col.touch)
           elseif entity.body.type == 'bump' and col.other.body.type == 'player' then
-            bumpCollision(col.other, entity, {x = -col.normal.x, y = -col.normal.y})
+            bumpCollision(col.other, entity, {x = -col.normal.x, y = -col.normal.y}, col.touch)
           else
           end
         end
