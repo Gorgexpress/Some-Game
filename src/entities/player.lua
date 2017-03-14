@@ -64,10 +64,10 @@ function Player.new(args)
     idle_r = anim8.newAnimation(grid(2, 2), 1000),
     idle_d = anim8.newAnimation(grid(2, 1), 1000),
     idle_l = anim8.newAnimation(grid(2, 4), 1000),
-    running_u = anim8.newAnimation(grid('1-3', 3), 0.2),
-    running_r = anim8.newAnimation(grid('1-3', 2), 0.2),
-    running_d = anim8.newAnimation(grid('1-3', 1), 0.2),
-    running_l = anim8.newAnimation(grid('1-3', 4), 0.2),
+    running_u = anim8.newAnimation(grid('1-3', 3, 2, 3), 0.2),
+    running_r = anim8.newAnimation(grid('1-3', 2, 2, 2), 0.2),
+    running_d = anim8.newAnimation(grid('1-3', 1, 2, 1), 0.2),
+    running_l = anim8.newAnimation(grid('1-3', 4, 2, 4), 0.2),
     },
   }
   entity.animator.current = entity.animator.animations.idle_u
