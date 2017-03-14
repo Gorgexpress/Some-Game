@@ -1,6 +1,6 @@
 local Bump = require 'lib/bump'
 local vec2 = require 'lib/vec2'
-local acos = math.acos
+local acos, abs, min = math.acos, math.abs, math.min
 
 
 local m_physics
@@ -14,19 +14,46 @@ end
 ]]
 
 --TODO move this into player.lua or a utility function.
+--[[
+The self variable always refers to the player here. The normal variable is always in respect to the player too.
+3 cases here.
+Case 1: If the player is idle, the other entity will always attack the player
+Case 2: If one entity A into the side or back of entity B, then entity A attacks entity B.
+Case 3: For head on collision, the player must 'clip' the side of the other entity to do damage. If the centers
+of both entities are too close, the player is the one that gets attacked.
+
+This code is a mess, but it works so I haven't bothered changing it. The way it is now is pretty efficient,
+but this method will rarely be called so that's not an issue. One way to clean up the code would be to 
+compute the dot product of the two entities' direction normals. Head on collision will only occur if the
+result is -1. The current method assumes movement in only 4 directions, but the dot product would make it
+easy to apply to any arbitrary angles. 
+]]
 local function bumpCollision(self, other, normal)
+  --player always loses if idle
+  if self.state == 'idle' then
+    self:onCollision(other, 'bumped')
+    other:onCollision(self, 'bumper')
+    return
+  end
   local p1, p2 = self.transform.position + self.body.offset, other.transform.position + other.body.offset
   local f1, f2 = self.transform.forward, other.transform.forward
   local s1, s2 = self.body.size, other.body.size
+  local depth_hit = 16
   if normal.y == -1 or normal.y == 1 then
     if f1.y == -f2.y then
-      if self.state == 'idle' or (p1.x + s1.x / 2 > p2.x + s2.x / 4 and
-        p1.x + s2.x / 2 < p2.x + s2.x * 0.75) then
+      if p1.x < p2.x and p1.x + s1.x > p2.x + s2.x then
         self:onCollision(other, 'bumped')
         other:onCollision(self, 'bumper')
       else
-        self:onCollision(other, 'bumper')
-        other:onCollision(self, 'bumped')
+        local depth_left = abs(p2.x + s2.x - p1.x)
+        local depth_right = abs(p1.x + s1.x - p2.x)
+        if min(depth_left, depth_right) > depth_hit then
+          self:onCollision(other, 'bumped')
+          other:onCollision(self, 'bumper') 
+        else 
+          self:onCollision(other, 'bumper')
+          other:onCollision(self, 'bumped')
+        end
       end
     elseif f1.y == f2.y then 
       if f1.y == 1 then 
@@ -57,13 +84,19 @@ local function bumpCollision(self, other, normal)
     end
   else 
     if f1.x == -f2.x then
-      if self.state.current == 'idle' or (p1.y + s1.y / 2 > p2.y + s2.y / 4 and
-        p1.y + s1.y / 2 < p2.y + s2.y * 0.75) then
+      if p1.y < p2.y and p1.y + s1.y > p2.y + s2.y then
         self:onCollision(other, 'bumped')
         other:onCollision(self, 'bumper')
       else
-        self:onCollision(other, 'bumper')
-        other:onCollision(self, 'bumped')
+        local depth_left = abs(p2.y + s2.y - p1.y)
+        local depth_right = abs(p1.y + s1.y - p2.y)
+        if min(depth_left, depth_right) > depth_hit then
+          self:onCollision(other, 'bumped')
+          other:onCollision(self, 'bumper') 
+        else 
+          self:onCollision(other, 'bumper')
+          other:onCollision(self, 'bumped')
+        end
       end
     elseif f1.x == f2.x then 
       if f1.x == 1 then 

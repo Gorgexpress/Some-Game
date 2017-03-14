@@ -61,6 +61,7 @@ function Player.new(args)
   entity.sprite = image
   entity.timer = Timer.new()
   entity.speed = 250
+  entity.acceleration = 1250
   return setmetatable(entity, Player_mt)
 end
 
@@ -93,7 +94,7 @@ function Player.update(self, dt)
   self.center = self.transform.position + self.body.offset + self.body.size * 0.5
   self.timer:update(dt)
   if self.state == 'idle' or self.state == 'running' then
-    self.stamina.current = math.min(self.stamina.current + STAMINA_REGEN* dt, self.stamina.max)
+    self.stamina.current = math.min(self.stamina.current + STAMINA_REGEN * dt, self.stamina.max)
   end
 end
 
