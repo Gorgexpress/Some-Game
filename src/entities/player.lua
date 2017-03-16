@@ -87,6 +87,7 @@ function Player.new(args)
   entity.max_speed = 250
   entity.seconds_to_max_speed = 0.1
   entity.time_running = 0
+  --Unused right now. Will be used if I decide to factor in trajectory of the player in collisions.
   entity.old_x = 0
   entity.old_y = 0
   return setmetatable(entity, Player_mt)
@@ -96,22 +97,24 @@ function Player.draw(self)
   self.animator.current:draw(self.sprite, self.transform.position:unpack())
 end
 
-local function recover(self)
-  movement()
-end
-
 function Player.onCollision(self, other, type)
   if type then
-    self.velocity = Vec2(0, 0)
     if type == 'bumper' then
-      self.timer:after(0.1, function() self.state = 'idle' movement() end)
-      self.state = 'bumping'
-      self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
-    else
+      self.time_running = 0
+      --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
+    elseif state ~= 'knockbacked' then
+      self.state = 'knockbacked'
       local info = other.body.response_info
+      self.velocity = other.transform.forward:normalize() * 250
       self.health, self.stamina.current = self.health - info.damage, self.stamina.current - info.stamina_damage
-      self.timer:after(0.2, function() self.state = 'idle' movement() end)
-      self.state = 'bumped'
+      --TODO? use tweening instead with some kind of interpolation that makes it seem 
+      --like there is friction(entity slows down before stopping, instead of stopping suddenly)
+      self.timer:after(0.2, function() 
+        if self.state == 'knockbacked' then
+          self.state = 'idle' 
+          movement() 
+        end
+      end)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
     end
   end

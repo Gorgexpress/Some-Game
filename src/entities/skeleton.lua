@@ -42,7 +42,6 @@ local function onCollision(self, other, type)
       self.ai.timer = 0.1
       self.state.current = 'bump'
       self.velocity = -self.transform.forward:normalize() * 250
-      other.velocity = self.transform.forward:normalize() * 250
     else
       local info = other.body.response_info
       self.ai.timer = 0.2
