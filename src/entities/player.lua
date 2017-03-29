@@ -51,7 +51,6 @@ function Player.new(args)
     type = 'player',
     response_info = {
       damage = 1,
-      stamina_damage = 25,
       knockback = 500,
     },
   }
@@ -106,7 +105,7 @@ function Player.onCollision(self, other, type)
       self.state = 'knockbacked'
       local info = other.body.response_info
       self.velocity = other.transform.forward:normalize() * 250
-      self.health, self.stamina.current = self.health - info.damage, self.stamina.current - info.stamina_damage
+      self.health = self.health - info.damage
       --TODO? use tweening instead with some kind of interpolation that makes it seem 
       --like there is friction(entity slows down before stopping, instead of stopping suddenly)
       self.timer:after(0.2, function() 
