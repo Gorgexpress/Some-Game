@@ -1,0 +1,2 @@
+bump.wav = http://www.noiseforfun.com/2012-sound-effects/thud/
+hurt.wav = http://www.noiseforfun.com/2012-sound-effects/thud-mega/

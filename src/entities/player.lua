@@ -26,10 +26,13 @@ local Timer = require 'lib/timer'
 local Asset = require 'src/managers/asset-manager'
 local image = Asset.getImage('player')
 local Utility = require 'lib/utility'
+local Signal = require 'lib/signal'
 local vecToDir = Utility.vecToDir
 local grid = anim8.newGrid(40, 40, image:getWidth(), image:getHeight())
 local SIN45 = 0.70710678118
 local Entity = require 'src/managers/entity-manager'
+local SoundManager = require 'src/managers/sound-manager'
+local max, min = math.max, math.min
 local STAMINA_REGEN = 50
 local Player = {}
 local Player_mt = {}
@@ -100,8 +103,10 @@ function Player.onCollision(self, other, type)
   if type ~= 'tile' then
     if type == 'bumper' then
       self.time_running = 0
+      SoundManager.playSound('bump')
       --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
     elseif type == 'bumped' and state ~= 'knockbacked' then
+      SoundManager.playSound('bump')
       self.state = 'knockbacked'
       local info = other.body.response_info
       self.velocity = other.transform.forward:normalize() * 250
@@ -116,7 +121,13 @@ function Player.onCollision(self, other, type)
       end)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
     elseif type == 'projectile' then
+      if other.body.damage then 
+        max(self.health = self.health - other.body.info.damage, 0) 
+      end
     end
+  end
+  if self.health <= 0 then
+    
   end
 end
 

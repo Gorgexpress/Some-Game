@@ -14,7 +14,7 @@ end
 
 function AssetManager.getSound(name)
   if not assets[name] then
-    assets[name] = love.audio.newSource('assets/' .. name .. '.wav')
+    assets[name] = love.audio.newSource('assets/sound/' .. name .. '.wav')
   end
   return assets[name]
 end

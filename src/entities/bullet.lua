@@ -38,6 +38,7 @@ function Entity.new(args)
       offset = Vec2(0, 0),
       filter = filter,
       type = 'projectile',
+      damage = 1,
       response_info = {
         damage = 1,
       },

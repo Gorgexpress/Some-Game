@@ -143,7 +143,7 @@ function PhysicsSystem.update(entities, num_entities, dt)
       p.x, p.y = actual_x - ox, actual_y - oy
       for j=1, len do
         local col = cols[j]
-        if col.other.body and not (ignore[entity] and ignore[entity][col.other]) then
+        if col.other.body and not (ignore[entity] and ignore[entity][col.other]) then --not a tile collision
           if not ignore[col.other] then ignore[col.other] = {} end
           ignore[col.other][entity] = true
           if entity.body.type == 'player' and col.other.body.type == 'bump' then
@@ -154,8 +154,9 @@ function PhysicsSystem.update(entities, num_entities, dt)
             if entity.onCollision then entity:onCollision(col.other, col.other.body.type) end
             if col.other.onCollision then col.other:onCollision(entity.body.type) end
           end
-        elseif col.other.properties then
+        elseif col.other.properties then --tile collision. 
           entity:onCollision(col.other, 'tile')
+          
         end
       end
     end
