@@ -14,7 +14,7 @@ function love.load()
 
   g_player = Entity.add('player', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y)})
   Entity.add('bump-base', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
-
+  Entity.add('ranged-base', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
   camera = gamera.new(0, 0, world.width, world.height)
   camera:setPosition(g_player.transform.position.x, g_player.transform.position.y)
 end

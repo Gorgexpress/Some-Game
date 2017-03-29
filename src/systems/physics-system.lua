@@ -151,7 +151,11 @@ function PhysicsSystem.update(entities, num_entities, dt)
           elseif entity.body.type == 'bump' and col.other.body.type == 'player' then
             bumpCollision(col.other, entity, {x = -col.normal.x, y = -col.normal.y}, col.touch)
           else
+            if entity.onCollision then entity:onCollision(col.other, col.other.body.type) end
+            if col.other.onCollision then col.other:onCollision(entity.body.type) end
           end
+        elseif col.other.properties then
+          entity:onCollision(col.other, 'tile')
         end
       end
     end

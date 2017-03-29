@@ -36,7 +36,7 @@ function EntityManager.update(dt)
   --destroy entities if needed. We do this by swapping them with the last element in the array and setting their value to nil
   for i=1, num_to_destroy do
     local index = entities_to_destroy[i]
-    PhysycsSystem.onDestroy(m_entities[index])
+    PhysicsSystem.onDestroy(m_entities[index])
     m_entities[index] = m_entities[m_size]
     m_entities[m_size] = nil
     m_size = m_size - 1

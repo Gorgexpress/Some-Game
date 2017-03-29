@@ -97,11 +97,11 @@ function Player.draw(self)
 end
 
 function Player.onCollision(self, other, type)
-  if type then
+  if type ~= 'tile' then
     if type == 'bumper' then
       self.time_running = 0
       --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
-    elseif state ~= 'knockbacked' then
+    elseif type == 'bumped' and state ~= 'knockbacked' then
       self.state = 'knockbacked'
       local info = other.body.response_info
       self.velocity = other.transform.forward:normalize() * 250
@@ -115,6 +115,7 @@ function Player.onCollision(self, other, type)
         end
       end)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
+    elseif type == 'projectile' then
     end
   end
 end
