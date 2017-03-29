@@ -1,5 +1,6 @@
 local PhysicsSystem = require 'src/systems/physics-system'
 local VelocitySystem = require 'src/systems/velocity-system'
+local Signal = require 'lib/signal'
 local EntityManager = {}
 local m_entities = {}
 local m_size = 0
@@ -37,6 +38,7 @@ function EntityManager.update(dt)
   for i=1, num_to_destroy do
     local index = entities_to_destroy[i]
     PhysicsSystem.onDestroy(m_entities[index])
+    Signal.emit('destroyed', m_entities[index])
     m_entities[index] = m_entities[m_size]
     m_entities[m_size] = nil
     m_size = m_size - 1

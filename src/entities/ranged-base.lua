@@ -1,6 +1,7 @@
 local Vec2 = require 'lib/vec2'
 local THINK_TIME = 0.25
 local EntityManager = require 'src/managers/entity-manager'
+local floor, abs = math.floor, math.abs
 local Entity = {}
 local Entity_mt = {}
 
@@ -10,14 +11,30 @@ local DEFAULT_THINK_TIMER = 0.5
 local DEFAULT_ATTACK_TIMER = 2
 
 
+local function round(x)
+  return floor(x + 0.5)
+end
+
+--need to make it face the player when shooting
 function Entity.think(self)
+
+  function facePlayer(dx, dy) 
+    local forward = Vec2(dx, dy):normalize()
+    if abs(forward.x) > abs(forward.y) then
+      self.transform.forward = Vec2(round(forward.x), 0)
+    else
+      self.transform.forward = Vec2(0, round(forward.y))
+    end
+  end
+
   if self.state == 'hurt' or self.state =='melee' then return end
   self.velocity.x, self.velocity.y = 0, 0
+  local dx, dy =  self.target.center.x - self.transform.position.x, self.target.center.y - self.transform.position.y
   if not self.attacking then
-    local dx, dy = self.transform.position.x - self.target.center.x, self.transform.position.y - self.target.center.y
     if dx * dx + dy * dy < self.aggro_range then
       self.attacking = true
       self.think_timer = self.attack_timer
+      facePlayer(dx, dy)
     end
   else 
     local args =  {
@@ -26,6 +43,7 @@ function Entity.think(self)
     }
     EntityManager.add('bullet', args)
     self.think_timer = self.attack_timer
+    facePlayer(dx, dy)
   end
 end
 

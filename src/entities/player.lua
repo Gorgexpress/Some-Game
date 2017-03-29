@@ -106,7 +106,7 @@ function Player.onCollision(self, other, type)
       SoundManager.playSound('bump')
       --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
     elseif type == 'bumped' and state ~= 'knockbacked' then
-      SoundManager.playSound('bump')
+      SoundManager.playSound('hurt')
       self.state = 'knockbacked'
       local info = other.body.properties
       self.velocity = other.transform.forward:normalize() * 250
@@ -122,7 +122,7 @@ function Player.onCollision(self, other, type)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
     elseif type == 'projectile' then
       if other.body.damage then 
-        max(self.health = self.health - other.body.properties.damage, 0) 
+        self.health = max(self.health - other.body.properties.damage, 0) 
       end
     end
   end
