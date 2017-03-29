@@ -38,7 +38,7 @@ function Entity.onCollision(self, other, type)
       self.state = 'bump'
       self.velocity = -self.transform.forward:normalize() * 250
     elseif type == 'bumped' then 
-      local info = other.body.response_info
+      local info = other.body.properties
       self.think_timer = 0.2
       self.state = 'bump'
       self.health = self.health - info.damage
@@ -76,7 +76,7 @@ function Entity.new(args)
       offset = Vec2(0, 0),
       filter = filter,
       type = 'bump',
-      response_info = {
+      properties = {
         damage = 1,
       },
 

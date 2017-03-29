@@ -52,7 +52,7 @@ function Player.new(args)
     offset = Vec2(4, 8),
     filter = playerFilter,
     type = 'player',
-    response_info = {
+    properties = {
       damage = 1,
       knockback = 500,
     },
@@ -108,7 +108,7 @@ function Player.onCollision(self, other, type)
     elseif type == 'bumped' and state ~= 'knockbacked' then
       SoundManager.playSound('bump')
       self.state = 'knockbacked'
-      local info = other.body.response_info
+      local info = other.body.properties
       self.velocity = other.transform.forward:normalize() * 250
       self.health = self.health - info.damage
       --TODO? use tweening instead with some kind of interpolation that makes it seem 
@@ -122,12 +122,12 @@ function Player.onCollision(self, other, type)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
     elseif type == 'projectile' then
       if other.body.damage then 
-        max(self.health = self.health - other.body.info.damage, 0) 
+        max(self.health = self.health - other.body.properties.damage, 0) 
       end
     end
   end
   if self.health <= 0 then
-    
+
   end
 end
 

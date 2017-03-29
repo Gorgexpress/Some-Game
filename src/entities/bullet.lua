@@ -39,7 +39,7 @@ function Entity.new(args)
       filter = filter,
       type = 'projectile',
       damage = 1,
-      response_info = {
+      properties = {
         damage = 1,
       },
 
