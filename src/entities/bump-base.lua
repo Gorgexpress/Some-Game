@@ -42,7 +42,7 @@ function Entity.onCollision(self, other, type)
       self.think_timer = 0.1
       self.state.current = 'bump'
       self.velocity = -self.transform.forward:normalize() * 250
-    else
+    elseif type =='bumped' then
       local info = other.body.properties
       self.think_timer = 0.2
       self.state.current = 'bump'

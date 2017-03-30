@@ -37,11 +37,9 @@ function Entity.think(self)
       facePlayer(dx, dy)
     end
   else 
-    local args =  {
-      position = self.transform.position:clone(),
-      velocity = (self.target.center - self.transform.position):normalize() * 50
-    }
-    EntityManager.add('bullet', args)
+    local position = self.transform.position + self.body.offset + self.body.size * 0.5
+    local velocity = (self.target.center - position):normalize() * 50
+    EntityManager.add('bullet', {position = position, velocity = velocity})
     self.think_timer = self.attack_timer
     facePlayer(dx, dy)
   end

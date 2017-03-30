@@ -41,6 +41,11 @@ local function playerFilter(self, other)
   return 'slide'
 end
 
+local function die(self)
+  self.state = 'dying'
+  Timer.after(2, function() self.destroyed = true end)
+end
+
 function Player.new(args) 
   local entity = {}
   entity.transform = {

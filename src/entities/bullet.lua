@@ -29,10 +29,6 @@ end
 
 function Entity.new(args) 
   local entity = {}
-  entity.transform = args.transform or {
-      position = args.position or Vec2(0, 0),
-      forward = Vec2(0, -1),
-  }
   entity.body = args.body or {
       size = Vec2(6, 6),
       offset = Vec2(0, 0),
@@ -44,6 +40,13 @@ function Entity.new(args)
       },
 
   }
+  entity.transform = args.transform or {
+      position = args.position or Vec2(0, 0),
+      forward = Vec2(0, -1),
+  }
+  if args.position then
+    entity.transform.position = entity.transform.position - entity.body.size * 0.5
+  end
   entity.velocity = args.velocity or Vec2(0, 0)
   entity.target = args.target or g_player
   entity.active = true
