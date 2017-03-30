@@ -3,6 +3,7 @@ g_player = {}
 local sti = require "lib/sti"
 local gamera = require 'lib/gamera'
 local Entity = require 'src/managers/entity-manager'
+local Timer = require 'lib/timer'
 local Vec2 = require 'lib/vec2'
 
 function love.load()
@@ -21,6 +22,7 @@ end
     
 function love.update(dt)
   Entity.update(dt)
+  Timer.update(dt)
 end
 
 function love.draw()
@@ -52,7 +54,7 @@ local actions = {
   ["left"] = function() movement() end,
   ["down"] = function() movement() end,
   ["right"] = function() movement() end,
-  ['combo'] = function() combo() end,
+  ['combo'] = function() g_player:action1() end,
 }
 
 function movement()
@@ -76,7 +78,7 @@ function love.keypressed(key)
   end
   if actions[action] then
     input_state[action] = not input_state[action]
-    movement()
+    actions[action]()
   end
 end
 
@@ -86,10 +88,10 @@ function love.keyreleased(key)
   elseif key == 's' then action = 'down'
   elseif key == 'a' then action = 'left'
   elseif key == 'd' then action = 'right'
-  elseif key == 'space' then action = 'combo'
+  elseif key == 'space' then action = 'combo2'
   end
   if actions[action] then
     input_state[action] = not input_state[action]
-    movement()
+    actions[action]()
   end
 end

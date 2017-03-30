@@ -38,7 +38,10 @@ local Player = {}
 local Player_mt = {}
 
 local function playerFilter(self, other)
-  return 'slide'
+  if other.properties or (other.body and other.body.type ~= 'p_projectile') then 
+    return 'slide'
+  end
+  return nil
 end
 
 local function die(self)
@@ -193,6 +196,10 @@ function Player.move(self, dir_x, dir_y)
     --end
     return false
   end
+end
+
+function Player.action1(self)
+  Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 150})
 end
 
 

@@ -7,7 +7,7 @@ local Entity_mt = {}
 function Entity.onCollision(self, other, type)
   self.destroyed = true
   if type then
-    if type == 'player' then
+    if type == 'bump' then
     end
   end
 end
@@ -17,7 +17,7 @@ function Entity.draw(self)
 end
 
 local function filter(self, other)
-  if other.properties or other == self.target then
+  if other.properties or (other.body and other.body.type ~= 'player') then
     return 'cross'
   end
   return nil 
@@ -33,7 +33,7 @@ function Entity.new(args)
       size = Vec2(6, 6),
       offset = Vec2(0, 0),
       filter = args.filter or filter,
-      type = args.type or 'projectile',
+      type = args.type or 'p_projectile',
       damage = 1,
       properties = {
         damage = 1,

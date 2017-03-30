@@ -177,7 +177,9 @@ function PhysicsSystem.onAdd(entity)
 end
 
 function PhysicsSystem.onDestroy(entity)
-  m_physics:remove(entity)
+  if entity.body then
+    m_physics:remove(entity)
+  end
 end
 
 local function getCellRect(world, cx,cy)
