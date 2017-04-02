@@ -33,12 +33,14 @@ local SIN45 = 0.70710678118
 local Entity = require 'src/managers/entity-manager'
 local SoundManager = require 'src/managers/sound-manager'
 local max, min = math.max, math.min
-local STAMINA_REGEN = 50
 local Player = {}
 local Player_mt = {}
 
 local function playerFilter(self, other)
-  if other.properties or (other.body and other.body.type ~= 'p_projectile') then 
+  if other.body and other.body.type == 'projectile' then
+    return 'cross'
+  end
+  if other.properties or (other.body and other.body.type == 'bump') then 
     return 'slide'
   end
   return nil
@@ -86,11 +88,7 @@ function Player.new(args)
   entity.state = 'idle'
   entity.buffer = {}
   entity.health, entity.max_health = 50, 50
-  entity.stamina = {
-    current = 100,
-    max = 100,
-    exhausted = false
-  }
+
   entity.sprite = image
   entity.timer = Timer.new()
   entity.speed = 0
@@ -150,7 +148,7 @@ function Player.update(self, dt)
     self.velocity = self.velocity_dir * self.speed
   end
   if self.state == 'idle' or self.state == 'running' then
-    self.stamina.current = math.min(self.stamina.current + STAMINA_REGEN* dt, self.stamina.max)
+
   end
 end
 

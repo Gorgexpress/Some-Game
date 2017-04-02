@@ -15,7 +15,6 @@ local function round(x)
   return floor(x + 0.5)
 end
 
---need to make it face the player when shooting
 function Entity.think(self)
 
   function facePlayer(dx, dy) 
@@ -39,7 +38,7 @@ function Entity.think(self)
   else 
     local position = self.transform.position + self.body.offset + self.body.size * 0.5
     local velocity = (self.target.center - position):normalize() * 50
-    EntityManager.add('bullet', {position = position, velocity = velocity})
+    EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
     self.think_timer = self.attack_timer
     facePlayer(dx, dy)
   end
