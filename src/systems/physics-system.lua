@@ -1,5 +1,6 @@
 local Bump = require 'lib/bump'
 local vec2 = require 'lib/vec2'
+local PolygonCollision = require 'lib/polygon-collision'
 local acos, abs, min = math.acos, math.abs, math.min
 
 
@@ -41,7 +42,6 @@ local function bumpCollision(self, other, normal, touch)
   local f1, f2 = self.transform.forward, other.transform.forward
   local s1, s2 = self.body.size, other.body.size
   local angle = math.atan2(touch.y - self.old_y, touch.x - self.old_x)
-  --print(math.deg(angle))
   local depth_hit = 16
   if normal.y == -1 or normal.y == 1 then
     if f1.y == -f2.y then
@@ -138,30 +138,64 @@ function PhysicsSystem.update(entities, num_entities, dt)
     local entity = entities[i]
     if entity.body then
       local p = entity.transform.position
+      local old_x, old_y = p:unpack() --for debugging
       local ox, oy = entity.body.offset:unpack()
       local actual_x, actual_y, cols, len = m_physics:move(entity, p.x + ox , p.y + oy, entity.body.filter)
       p.x, p.y = actual_x - ox, actual_y - oy
       for j=1, len do
         local col = cols[j]
-        if col.other.body and not (ignore[entity] and ignore[entity][col.other]) then --not a tile collision
+        if col.other.body and not (ignore[entity] and ignore[entity][col.other]) then --aabb vs aabb or aabb vs swept shape collision
           if not ignore[col.other] then ignore[col.other] = {} end
           ignore[col.other][entity] = true
           if entity.body.type == 'player' and col.other.body.type == 'bump' then
             bumpCollision(entity, col.other, col.normal, col.touch)
           elseif entity.body.type == 'bump' and col.other.body.type == 'player' then
             bumpCollision(col.other, entity, {x = -col.normal.x, y = -col.normal.y}, col.touch)
-          else
+          elseif entity.body.polygon or col.other.body.polygon then --aabb has collided with a polygon's swept shape
+            if old_x ~= p.x or old_y ~= p.y then
+              print("Swept shape has caused an illegal collision response!")
+            end
+            local collided = false
+            --convert the aabb to a set of vertices and test for collision
+            if col.other.body.polygon then --collided with swept shape
+              local w, h = entity.body.size:unpack()
+              vertices = {actual_x, actual_y, actual_x + w, actual_y, actual_x + w, actual_y + h, actual_x, actual_y + h}
+              collided = PolygonCollision(vertices, col.other.body.polygon)
+            else --the entity we just moved is the polygon surrounded by a swept shape
+              local x, y = (col.other.transform.position + col.other.body.offset):unpack()
+              local w, h = col.other.body.size:unpack()
+              vertices = {x, y, x + w, y, x + w, y + h, x, y + h}
+              collided = PolygonCollision(vertices, entity.body.polygon)
+            end
+            if collided then
+              if entity.onCollision then entity:onCollision(col.other, col.other.body.type) end
+              if col.other.onCollision then col.other:onCollision(entity, entity.body.type) end
+            end
+          --end aabb vs polygon code
+          else --only standard aabb vs aabb collisions remain at this point
             if entity.onCollision then entity:onCollision(col.other, col.other.body.type) end
-            if col.other.onCollision then col.other:onCollision(entity.body.type) end
+            if col.other.onCollision then col.other:onCollision(entity, entity.body.type) end
           end
         elseif col.other.properties then --tile collision. 
-          entity:onCollision(col.other, 'tile')
-          
+          --aabb vs tile
+          if not entity.body.polygon then
+            entity:onCollision(col.other, 'tile')
+          --polygon vs tile
+          else
+            local x, y = col.other.x, col.other.y
+            local w, h = col.other.width, col.other.height
+            vertices = {x, y, x + w, y, x + w, y + h, x, y + h}
+            if PolygonCollision(vertices, entity.body.polygon) then
+              entity:onCollision(col.other, 'tile')
+            end
+          end
         end
       end
     end
   end
 end
+
+
 
 function PhysicsSystem.setWorld(map)
   m_physics = Bump.newWorld() 
@@ -182,6 +216,10 @@ function PhysicsSystem.onDestroy(entity)
   end
 end
 
+function PhysicsSystem.updateRectSize(entity, width, height)
+  m_physics:update(entity, entity.transform.position.x, entity.transform.position.y, width, height)
+end
+--methods for drawing hitboxes and such for debugging purposes below
 local function getCellRect(world, cx,cy)
   local cellSize = world.cellSize
   local l,t = world:toWorld(cx,cy)

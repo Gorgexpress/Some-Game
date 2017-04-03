@@ -5,6 +5,8 @@ local gamera = require 'lib/gamera'
 local Entity = require 'src/managers/entity-manager'
 local Timer = require 'lib/timer'
 local Vec2 = require 'lib/vec2'
+local debug = false
+local pause = false
 
 function love.load()
   map = sti("assets/maps/test.lua", {"bump"})
@@ -21,6 +23,7 @@ function love.load()
 end
     
 function love.update(dt)
+  if pause then return end
   Entity.update(dt)
   Timer.update(dt)
 end
@@ -33,7 +36,7 @@ function love.draw()
     for _, entity in ipairs(Entity.entities) do
       entity:draw()
     end
-    Entity.drawCollision()
+    if debug then Entity.drawCollision() end
   end)
   love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end
@@ -55,6 +58,8 @@ local actions = {
   ["down"] = function() movement() end,
   ["right"] = function() movement() end,
   ['combo'] = function() g_player:action1() end,
+  ["debug"] = function() debug = not debug end,
+  ["pause"] = function() pause = not pause end,
 }
 
 function movement()
@@ -75,6 +80,8 @@ function love.keypressed(key)
   elseif key == 'a' then action = 'left'
   elseif key == 'd' then action = 'right'
   elseif key == 'space' then action = 'combo'
+  elseif key == 'n' then action = 'debug'
+  elseif key == 'p' then action = 'pause'
   end
   if actions[action] then
     input_state[action] = not input_state[action]

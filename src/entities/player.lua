@@ -40,6 +40,7 @@ local function playerFilter(self, other)
   if other.body and other.body.type == 'projectile' then
     return 'cross'
   end
+  
   if other.properties or (other.body and other.body.type == 'bump') then 
     return 'slide'
   end
