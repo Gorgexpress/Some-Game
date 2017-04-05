@@ -24,6 +24,19 @@ local function bbox(self)
   Physics.updateRectSize(self, w, h)
 end
 
+local function extend(v, dx, dy)
+  v[1], v[2], v[3], v[4] = v[1] + dx, v[2] + dy, v[3] + dx, v[4] + dy
+end
+
+local function move(v, dx, dy)
+  v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8] = 
+    v[1] + dx, v[2] + dy, v[3] + dx, v[4] + dy, v[5] + dx, v[6] + dy, v[7] + dx, v[8] + dy
+end
+
+local function shorten(v, dx, dy)
+  v[5], v[6], v[7], v[8] = v[5] + dx, v[6] + dy, v[7] + dx, v[8] + dy
+end
+
 function Entity.onCollision(self, other, type)
   if type == 'tile' and self.state < 3 then
     self.state = 2
@@ -32,10 +45,9 @@ function Entity.onCollision(self, other, type)
   end
 end
 
+
 function Entity.draw(self)
-  local v = self.body.polygon
   love.graphics.polygon('fill', unpack(self.body.polygon))  
-  --love.graphics.line(v[1], v[2], v[3], v[4])   
 end
 
 local function filter(self, other)
@@ -68,11 +80,18 @@ function Entity.update(self, dt)
     if self.iterations > 0 then
       self.timer = self.timer - dt
       if self.timer <= 0 then
-        local cx, cy = (polygon[1] + polygon[3]) / 2, (polygon[2] + polygon[4]) / 2
-        local v = (self.target.center - Vec2(cx, cy)):normalize() * self.vel:len()
-        EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v}))
         self.state = 2
         self.timer = abs((self.body.polygon[3] - self.body.polygon[5]) / self.vel.x)
+        local cx, cy = (polygon[1] + polygon[3]) / 2, (polygon[2] + polygon[4]) / 2
+        local after = function()
+          local v = (self.target.center - Vec2(cx, cy)):normalize() * self.vel:len()
+          EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, wait = self.wait}))
+        end
+        if self.wait <= 0 then
+          after()
+        else
+          EntityManager.add('projectiles/spawner', {after = after, time = self.wait, position = Vec2(cx, cy)})
+        end
       end
     end
   elseif self.state == 2 then
