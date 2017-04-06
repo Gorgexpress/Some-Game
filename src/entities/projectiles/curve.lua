@@ -27,7 +27,7 @@ local function bbox(self)
 end
 
 function Entity.onCollision(self, other, type)
-
+  if other == self.target then self.state = 4 end
 end
 
 
@@ -112,7 +112,7 @@ function Entity.new(args)
 
   entity.body = args.body or {
       size = Vec2(1, 1),
-      offset = Vec2(0, 0),
+      offset = Vec2(-0.5, -0.5),
       filter = args.filter or filter,
       type = args.type or 'projectile',
       damage = 1,
@@ -141,7 +141,8 @@ function Entity.new(args)
     },
     body = entity.body,
     update = function(self) self.transform.position.x, self.transform.position.y = entity.curve:evaluate(0.5) end,
-    draw = function(self)    end
+    draw = function(self)    end,
+    onCollision = Entity.onCollision
   }
   local endp = {
     transform = {
@@ -150,7 +151,8 @@ function Entity.new(args)
     },
     body = entity.body,
     update = function(self) self.transform.position.x, self.transform.position.y = entity.curve:evaluate(0.9) end,
-    draw = function(self)  end
+    draw = function(self)  end,
+    onCollision = Entity.onCollision
   }
   entity.children = {mid, endp}
   EntityManager.add(mid)
