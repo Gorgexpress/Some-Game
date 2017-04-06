@@ -244,7 +244,7 @@ function PhysicsSystem.drawCollision(entities, num_entities)
       love.graphics.rectangle('line', l,t,w,h)
     end
   end
-
+--[[
   for i=1, num_entities do
     local entity = entities[i]
     if entity.body then
@@ -256,6 +256,15 @@ function PhysicsSystem.drawCollision(entities, num_entities)
       love.graphics.rectangle("fill", l, t, s.x, s.y)
       love.graphics.setColor(255,0,0)
       love.graphics.rectangle("line", l, t, s.x, s.y)
+    end
+  end
+  ]]
+  for i, v in pairs(m_physics.rects) do
+    if v then
+      love.graphics.setColor(255,0,0,70)
+      love.graphics.rectangle("fill", v.x, v.y, v.w, v.h)
+      love.graphics.setColor(255,0,0)
+      love.graphics.rectangle("line", v.x, v.y, v.w, v.h)
     end
   end
   love.graphics.setColor(r, g, b, a)

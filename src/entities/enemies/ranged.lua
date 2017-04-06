@@ -35,7 +35,8 @@ function Entity.think(self)
     local position = self.transform.position + self.body.offset + self.body.size * 0.5
     local velocity = (self.target.center - position):normalize() * 150
     --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
-    EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 2})
+    --EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 2})
+    EntityManager.add('projectiles/curve', {position = position})
     self.think_timer = self.attack_timer
     facePlayer(self, dx, dy)
   end

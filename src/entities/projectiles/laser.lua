@@ -1,6 +1,7 @@
 local Vec2 = require 'lib/vec2'
 local Physics = require "src/systems/physics-system"
 local EntityManager = require 'src/managers/entity-manager'
+local Timer = require 'lib/timer'
 local Utility = require 'lib/utility'
 local bbox = Utility.bbox
 local abs = math.abs
@@ -98,7 +99,7 @@ function Entity.new(args)
   local x1, y1 = x + half_width * forward.y, y - half_width * forward.x
   local x2, y2 = x - half_width * forward.y, y + half_width * forward.x
   local dx, dy = x2 - x1, y2 - y1
-  
+
   local transform = args.transform or {
     position = Vec2(x1, y1),
     forward = forward
