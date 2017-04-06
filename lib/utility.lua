@@ -26,4 +26,18 @@ function Utility.setAnimation(self, name, frame)
   end
 end
 
+function Utility.bbox(v)
+  local ulx,uly = v[1], v[2]
+	local lrx,lry = ulx,uly
+	for i=3,#v, 2 do
+    local x, y = v[i], v[i + 1]
+		if ulx > x then ulx = x end
+		if uly > y then uly = y end
+
+		if lrx < x then lrx = x end
+		if lry < y then lry = y end
+	end
+  return ulx, uly, lrx - ulx, lry - uly
+end
+
 return Utility

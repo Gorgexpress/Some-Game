@@ -1,25 +1,15 @@
 local Vec2 = require 'lib/vec2'
 local Physics = require "src/systems/physics-system"
 local EntityManager = require 'src/managers/entity-manager'
+local Utility = require 'lib/utility'
+local bbox = Utility.bbox
 local abs = math.abs
 local Entity = {}
 local Entity_mt = {}
 
-local function bbox(self)
-  local vertices = self.body.polygon
-  local ulx,uly = vertices[1], vertices[2]
-	local lrx,lry = ulx,uly
-	for i=3,#vertices, 2 do
-    local x, y = vertices[i], vertices[i + 1]
-		if ulx > x then ulx = x end
-		if uly > y then uly = y end
-
-		if lrx < x then lrx = x end
-		if lry < y then lry = y end
-	end
-
-  self.transform.position.x, self.transform.position.y = ulx, uly
-  local w, h = lrx - ulx, lry - uly
+local function updateBoundingBox(self)
+  local x, y, w, h = bbox(self.body.polygon)
+  self.transform.position.x, self.transform.position.y = x, y
   self.body.size.x, self.body.size.y = w, h
   Physics.updateRectSize(self, w, h)
 end
@@ -63,7 +53,7 @@ function Entity.update(self, dt)
     if self.timer <= 0 then self.state = 1 end
     --only the front of the laser is moving(causing the polygon to extend)
     extend(vertices, dx, dy)
-    bbox(self)
+    updateBoundingBox(self)
   elseif self.state == 1 then
     move(vertices, dx, dy)
     --no need to update the bounding box in this case, just move it with velocity
@@ -90,7 +80,7 @@ function Entity.update(self, dt)
     if self.timer <= 0 then self.state = 3 end
     --only the back of the laser moves, causing it to shorten
     shorten(vertices, dx, dy)
-    bbox(self)
+    updateBoundingBox(self)
   else
     self.destroyed = true
   end
