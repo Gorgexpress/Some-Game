@@ -153,7 +153,7 @@ function PhysicsSystem.update(entities, num_entities, dt)
             bumpCollision(col.other, entity, {x = -col.normal.x, y = -col.normal.y}, col.touch)
           elseif entity.body.polygon or col.other.body.polygon then --aabb has collided with a polygon's swept shape
             if old_x ~= p.x or old_y ~= p.y then
-              print("Swept shape has caused an illegal collision response!")
+              print("Swept shape might have caused an illegal collision response!")
             end
             local collided = false
             --convert the aabb to a set of vertices and test for collision

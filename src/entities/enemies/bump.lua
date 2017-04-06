@@ -5,11 +5,15 @@ local Entity = {}
 local Entity_mt = {}
 
 
-
-
+local function filter(self, other)
+  if not other.body or other.body.type == 'player' then return 'slide'
+  elseif other.body.type == 'projectile' then return nil
+  else return 'cross'
+  end
+end
 
 function Entity.think(self)
-  if self.state.current == 'hurt' or self.state.current =='melee' or self.state.current== 'stun' then return end
+  if self.state == 'hurt' or self.state =='melee' or self.state == 'stun' then return end
   local dx, dy = self.transform.position.x - g_player.center.x, self.transform.position.y - g_player.center.y
   if dx * dx + dy * dy < 700* 700 then
     if math.abs(dx) > math.abs(dy) then
@@ -36,16 +40,17 @@ end
 
 
 function Entity.onCollision(self, other, type)
+  if type == 'tile' or type == 'bump' then return end
   if type ~= 'tile' then
     self.velocity = Vec2(0, 0)
     if type == 'bumper' then
       self.think_timer = 0.1
-      self.state.current = 'bump'
+      self.state = 'bump'
       self.velocity = -self.transform.forward:normalize() * 250
     elseif type =='bumped' then
       local info = other.body.properties
       self.think_timer = 0.2
-      self.state.current = 'bump'
+      self.state = 'bump'
       self.health = self.health - info.damage
       self.velocity = other.transform.forward:normalize() * info.knockback
     end
@@ -56,10 +61,6 @@ function Entity.draw(self)
   love.graphics.rectangle('fill', self.transform.position.x, self.transform.position.y, self.body.size:unpack())   
 end
 
-local function filter(self, other)
-  if other.body and other.body.type == 'projectile' then return nil end
-  return 'slide'
-end
 
 function Entity.update(self, dt)
   self.think_timer = self.think_timer - dt
@@ -70,30 +71,30 @@ function Entity.update(self, dt)
 end
 
 function Entity.new(args) 
-  local entity = {}
-  entity.transform = args.transform or {
-      position = args.position or Vec2(0, 0),
-      forward = Vec2(0, -1),
+  local transform = args.transform or {
+    position = args.position or Vec2(0, 0),
+    forward = Vec2(0, -1),
   }
-  entity.body = args.body or {
-      size = Vec2(32, 32),
-      offset = Vec2(0, 0),
-      filter = filter,
-      type = 'bump',
-      properties = {
-        damage = 1,
-      },
+  local body = args.body or {
+    size = Vec2(32, 32),
+    offset = Vec2(0, 0),
+    filter = filter,
+    type = 'bump',
+    properties = {
+      damage = 1,
+    },
+  }
 
+  local entity = {
+    transform = transform,
+    body = body,
+    velocity = args.velocity or Vec2(0, 0),
+    state = 'idle',
+    think_timer = 0.25,
+    health = 50,
+    max_health = 50,
+    speed = args.speed or 50
   }
-  entity.velocity = args.velocity or Vec2(0, 0)
-  entity.state = {
-    current = 'idle'
-  }
-  entity.think_timer = 0.25
-  entity.health, entity.max_health = 50, 50
-  
-  entity.active = true
-  entity.speed = args.speed or 50
   return setmetatable(entity, Entity_mt)
 end
 

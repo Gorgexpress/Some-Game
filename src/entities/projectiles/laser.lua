@@ -51,38 +51,29 @@ function Entity.draw(self)
 end
 
 local function filter(self, other)
-  if other.body and other.body.polygon then return nil end
-  return 'cross'
+  if not other.body or other.body.type == 'player' then return 'cross'
+  else return nil end
 end
 
 function Entity.update(self, dt)
-  local polygon = self.body.polygon
+  local vertices = self.body.polygon
   local dx, dy = self.vel.x * dt, self.vel.y * dt
   if self.state == 0 then 
     self.timer = self.timer - dt
     if self.timer <= 0 then self.state = 1 end
     --only the front of the laser is moving(causing the polygon to extend)
-    polygon[1], polygon[2], polygon[3], polygon[4] = 
-      polygon[1] + dx, polygon[2] + dy, 
-      polygon[3] + dx, polygon[4] + dy
+    extend(vertices, dx, dy)
     bbox(self)
   elseif self.state == 1 then
-    --I'm kinda surprised this code even runs
-    --move every vertice in the laser
-    polygon[1], polygon[2], polygon[3], polygon[4], 
-      polygon[5], polygon[6], polygon[7], polygon[8] = 
-      polygon[1] + dx, polygon[2] + dy, 
-      polygon[3] + dx, polygon[4] + dy,
-      polygon[5] + dx, polygon[6] + dy, 
-      polygon[7] + dx, polygon[8] + dy
+    move(vertices, dx, dy)
     --no need to update the bounding box in this case, just move it with velocity
     self.transform.position.x, self.transform.position.y = self.transform.position.x + dx, self.transform.position.y + dy
     if self.iterations > 0 then
       self.timer = self.timer - dt
       if self.timer <= 0 then
         self.state = 2
-        self.timer = abs((self.body.polygon[3] - self.body.polygon[5]) / self.vel.x)
-        local cx, cy = (polygon[1] + polygon[3]) / 2, (polygon[2] + polygon[4]) / 2
+        self.timer = abs((vertices[3] - vertices[5]) / self.vel.x)
+        local cx, cy = (vertices[1] + vertices[3]) / 2, (vertices[2] + vertices[4]) / 2
         local after = function()
           local v = (self.target.center - Vec2(cx, cy)):normalize() * self.vel:len()
           EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, wait = self.wait}))
@@ -98,9 +89,7 @@ function Entity.update(self, dt)
     self.timer = self.timer - dt
     if self.timer <= 0 then self.state = 3 end
     --only the back of the laser moves, causing it to shorten
-    polygon[5], polygon[6], polygon[7], polygon[8] = 
-      polygon[5] + dx, polygon[6] + dy, 
-      polygon[7] + dx, polygon[8] + dy
+    shorten(vertices, dx, dy)
     bbox(self)
   else
     self.destroyed = true
@@ -108,46 +97,50 @@ function Entity.update(self, dt)
 end
 
 function Entity.new(args) 
-  local entity = {}
   local width = args.width or 4
   local half_width = width / 2
-  entity.vel = args.velocity or Vec2(0, 0)
-  local forward = entity.vel:normalize()
+  local velocity = args.velocity or Vec2(0, 0)
+  local forward = velocity:normalize()
   local x, y = args.position.x or 0, args.position.y or 0
   local x1, y1 = x + half_width * forward.y, y - half_width * forward.x
   local x2, y2 = x - half_width * forward.y, y + half_width * forward.x
   local dx, dy = x2 - x1, y2 - y1
-  entity.transform = args.transform or {
-      position = Vec2(x1, y1),
-      forward = forward
+  local transform = args.transform or {
+    position = Vec2(x1, y1),
+    forward = forward
   }
-  entity.body = args.body or {
-      size = Vec2(1, 1),
-      offset = Vec2(0, 0),
-      filter = args.filter or filter,
-      type = args.type or 'projectile',
+  local body = {
+    size = Vec2(1, 1),
+    offset = Vec2(0, 0),
+    filter = args.filter or filter,
+    type = args.type or 'projectile',
+    damage = 1,
+    properties = {
       damage = 1,
-      properties = {
-        damage = 1,
-      },
-      polygon = {x1, y1, x2, y2, x2, y2, x1, y1}
-
+    },
+    polygon = {x1, y1, x2, y2, x2, y2, x1, y1}
   }
-  entity.target = args.target or g_player
-  entity.iterations = args.iterations or 0
-  entity.iterate_time = args.iterate_time or 1
-  entity.wait = args.wait or 0.35
-  entity.parent = args.parent or nil
-  entity.active = true
-  entity.timer = args.timer or 0.5
-  entity.state = 0
+
+  local entity = {
+    transform = transform,
+    body = body,
+    vel = velocity,
+    target = args.target or g_player,
+    iterations = args.iterations or 0,
+    iterate_time = args.iterate_time or 1,
+    wait = args.wait or 0.35,
+    parent = args.parent or nil,
+    active = true,
+    timer = args.timer or 0.5,
+    state = 0
+  }
   return setmetatable(entity, Entity_mt)
 end
 
 Entity_mt.__index = Entity
 
 function Entity_mt.__call(_, args)
-    return Entity.new(args)
+  return Entity.new(args)
 end
 
 return setmetatable({}, Entity_mt)

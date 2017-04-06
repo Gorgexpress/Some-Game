@@ -1,3 +1,5 @@
+local floor = math.floor
+
 local Utility = {}
 
 function Utility.vecToDir(v)
@@ -9,6 +11,10 @@ end
 
 function Utility.getCenter(self)
   return self.transform.position + self.body.offset + self.body.size * 0.5
+end
+
+function Utility.round(x)
+  return floor(x + 0.5)
 end
 
 function Utility.setAnimation(self, name, frame)

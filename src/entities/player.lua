@@ -53,12 +53,11 @@ local function die(self)
 end
 
 function Player.new(args) 
-  local entity = {}
-  entity.transform = {
+  local transform = {
     position = args.position or Vec2(0, 0),
     forward = Vec2(0, -1),
   }
-  entity.body = {
+  local body = {
     size = Vec2(32, 32),
     offset = Vec2(4, 8),
     filter = playerFilter,
@@ -68,11 +67,7 @@ function Player.new(args)
       knockback = 500,
     },
   }
-  entity.center = entity.transform.position + entity.body.offset + entity.body.size * 0.5
-  entity.velocity = Vec2(0, 0)
-  entity.velocity_dir = Vec2(0, 0)
-  entity.animator = {
-    animations = {
+  local animations = {
     idle_u = anim8.newAnimation(grid(2, 3), 1000),
     idle_r = anim8.newAnimation(grid(2, 2), 1000),
     idle_d = anim8.newAnimation(grid(2, 1), 1000),
@@ -81,24 +76,33 @@ function Player.new(args)
     running_r = anim8.newAnimation(grid('1-3', 2, 2, 2), 0.2),
     running_d = anim8.newAnimation(grid('1-3', 1, 2, 1), 0.2),
     running_l = anim8.newAnimation(grid('1-3', 4, 2, 4), 0.2),
-    },
   }
-  entity.animator.current = entity.animator.animations.idle_u
+  local animator = {
+    animations = animations,
+    current = animations.idle_u
+  }
 
-  entity.active = true
-  entity.state = 'idle'
-  entity.buffer = {}
-  entity.health, entity.max_health = 50, 50
-
-  entity.sprite = image
-  entity.timer = Timer.new()
-  entity.speed = 0
-  entity.max_speed = 250
-  entity.seconds_to_max_speed = 0.1
-  entity.time_running = 0
-  --Unused right now. Will be used if I decide to factor in trajectory of the player in collisions.
-  entity.old_x = 0
-  entity.old_y = 0
+  local entity = {
+    transform = transform,
+    body = body,
+    animator = animator,
+    timer = Timer.new(),
+    active = true,
+    state = 'idle',
+    health = 50,
+    max_health = 50,
+    center = transform.position + body.offset + body.size * 0.5,
+    velocity = Vec2(0, 0),
+    velocity_dir = Vec2(0, 0),
+    sprite = image,
+    speed = 0,
+    max_speed = 250,
+    seconds_to_max_speed = 0.1,
+    time_running = 0,
+    --Unused right now. Will be used if I decide to factor in trajectory of the player in collisions.
+    old_x = 0,
+    old_y = 0
+  }
   return setmetatable(entity, Player_mt)
 end
 
