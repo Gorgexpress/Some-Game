@@ -89,12 +89,16 @@ end
 function Entity.new(args) 
   local width = args.width or 4
   local half_width = width / 2
+  --determine forward based off of velocity
   local velocity = args.velocity or Vec2(0, 0)
   local forward = velocity:normalize()
   local x, y = args.position.x or 0, args.position.y or 0
+  --calculate x and y of the frontmost 2 vertices based off the width, forward,
+  --and the initial position of the center
   local x1, y1 = x + half_width * forward.y, y - half_width * forward.x
   local x2, y2 = x - half_width * forward.y, y + half_width * forward.x
   local dx, dy = x2 - x1, y2 - y1
+  
   local transform = args.transform or {
     position = Vec2(x1, y1),
     forward = forward
