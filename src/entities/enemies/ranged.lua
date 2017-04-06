@@ -32,11 +32,13 @@ function Entity.think(self)
       facePlayer(self, dx, dy)
     end
   else 
-    local position = self.transform.position + self.body.offset + self.body.size * 0.5
-    local velocity = (self.target.center - position):normalize() * 150
-    --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
-    --EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 2})
-    EntityManager.add('projectiles/curve', {position = position})
+    if dx * dx + dy * dy > self.seal_range2 then
+      local position = self.transform.position + self.body.offset + self.body.size * 0.5
+      local velocity = (self.target.center - position):normalize() * 150
+      --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
+      EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 2})
+      --EntityManager.add('projectiles/curve', {position = position})
+    end
     self.think_timer = self.attack_timer
     facePlayer(self, dx, dy)
   end
@@ -49,11 +51,13 @@ function Entity.onCollision(self, other, type)
     self.velocity = Vec2(0, 0)
     if type == 'bumper' then
       self.think_timer = 0.1
+      self.attacking = false
       self.state = 'bump'
       self.velocity = -self.transform.forward:normalize() * 250
     elseif type == 'bumped' then 
       local info = other.body.properties
       self.think_timer = 0.2
+      self.attacking = false
       self.state = 'bump'
       self.health = self.health - info.damage
       self.velocity = other.transform.forward:normalize() * info.knockback
@@ -94,6 +98,7 @@ function Entity.new(args)
     }
   }
   local aggro_range = args.aggro_range or DEFAULT_AGGRO_RANGE
+  local seal_range = args.seal_range or 60
   local entity = {
     transform = transform,
     body = body,
@@ -107,7 +112,8 @@ function Entity.new(args)
     max_health = 10,
     speed = args.speed or 50,
     target = args.target or g_player,
-    aggro_range2 = aggro_range * aggro_range
+    aggro_range2 = aggro_range * aggro_range,
+    seal_range2 = seal_range * seal_range
   }
 
   return setmetatable(entity, Entity_mt)

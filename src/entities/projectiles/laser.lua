@@ -28,6 +28,10 @@ local function shorten(v, dx, dy)
   v[5], v[6], v[7], v[8] = v[5] + dx, v[6] + dy, v[7] + dx, v[8] + dy
 end
 
+local function update(self, dt)
+
+end
+
 function Entity.onCollision(self, other, type)
   if type == 'tile' and self.state < 3 then
     self.state = 2
@@ -51,7 +55,10 @@ function Entity.update(self, dt)
   local dx, dy = self.vel.x * dt, self.vel.y * dt
   if self.state == 0 then 
     self.timer = self.timer - dt
-    if self.timer <= 0 then self.state = 1 end
+    if self.timer <= 0 then 
+      self.timer = self.iterate_time
+      self.state = 1 
+    end
     --only the front of the laser is moving(causing the polygon to extend)
     extend(vertices, dx, dy)
     updateBoundingBox(self)

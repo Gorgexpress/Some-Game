@@ -8,11 +8,21 @@ local m_physics
 
 local PhysicsSystem = {}
 
---[[
+
 local function bumpCollision2(self, other, normal)
-  local angle = acos(self.transform.forward.dot(other.transform.forward))
+  local angle = acos(self.transform.forward:dot(other.transform.forward))
+  if normal.x ~= 0 then
+    angle = angle * normal.x
+  else
+    angle = angle * normal.y
+  end
+  if abs(angle) > 3 then 
+    print('head on')
+  elseif abs(angle) > 1 then
+  end
+  print(normal.x, normal.y, angle)
 end
-]]
+
 
 --TODO move this into player.lua or a utility function.
 --[[
@@ -30,6 +40,14 @@ Another way to do this could be using angles and trajectories.
 Could grab forward+middle point of player and compare with either
 forward+middle of the enemy, or the touch variable from bump.
 
+EDIT: Head on collision results now determined by a trajectory. If a line
+that infinitely extends from the center of the player on the axis of least seperation
+does NOT collide with the enemy, then the player succeeds. Otherwise, the player is hurt.
+Old code for head on collision commented out. New code only works for the case
+where entities can only face 4 directions(which they currently do and i have no plans of change that right now).
+
+Still would like a cleaner way to determine the results of non head on collisions.
+
 ]]
 local function bumpCollision(self, other, normal, touch)
   --player always loses if idle
@@ -43,9 +61,18 @@ local function bumpCollision(self, other, normal, touch)
   local s1, s2 = self.body.size, other.body.size
   local angle = math.atan2(touch.y - self.old_y, touch.x - self.old_x)
   local depth_hit = 16
+  local safe = 2
   if normal.y == -1 or normal.y == 1 then
     if f1.y == -f2.y then
-      if p1.x < p2.x and p1.x + s1.x > p2.x + s2.x then
+      local x = self.center.x
+      if x <= p2.x + safe or x >= p2.x + s2.x - safe then
+        self:onCollision(other, 'bumper')
+        other:onCollision(self, 'bumped')
+      else
+        self:onCollision(other, 'bumped')
+        other:onCollision(self, 'bumper') 
+      end
+      --[[if p1.x < p2.x and p1.x + s1.x > p2.x + s2.x then
         self:onCollision(other, 'bumped')
         other:onCollision(self, 'bumper')
       else
@@ -59,6 +86,7 @@ local function bumpCollision(self, other, normal, touch)
           other:onCollision(self, 'bumped')
         end
       end
+      ]]
     elseif f1.y == f2.y then 
       if f1.y == 1 then 
         if p1.y <= p2.y then 
@@ -88,6 +116,15 @@ local function bumpCollision(self, other, normal, touch)
     end
   else 
     if f1.x == -f2.x then
+      local y = self.center.y
+      if y <= p2.y + safe or y >= p2.y + s2.y - safe then
+        self:onCollision(other, 'bumper')
+        other:onCollision(self, 'bumped')
+      else
+        self:onCollision(other, 'bumped')
+        other:onCollision(self, 'bumper') 
+      end
+      --[[
       if p1.y < p2.y and p1.y + s1.y > p2.y + s2.y then
         self:onCollision(other, 'bumped')
         other:onCollision(self, 'bumper')
@@ -101,7 +138,7 @@ local function bumpCollision(self, other, normal, touch)
           self:onCollision(other, 'bumper')
           other:onCollision(self, 'bumped')
         end
-      end
+      end]]
     elseif f1.x == f2.x then 
       if f1.x == 1 then 
         if p1.x <= p2.x then 
