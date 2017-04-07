@@ -55,7 +55,7 @@ function Entity.update(self, dt)
         wait(self.wait)
         self.state = 2
         self.Timer:tween(self.speedup_time, self, {speed = self.max_speed}, 'quad')
-        wait(0.5)
+        wait(0.75)
         self.state = 4
         wait(4)
         self.state = 5
