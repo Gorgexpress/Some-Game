@@ -73,12 +73,8 @@ function Entity.update(self, dt)
     local current_angle = forward:to_polar()
     local target_angle = Vec2(dirx, diry)
     local diff = forward:angle_between(target_angle)
-    --clamp
-    --if forward:dot(target_angle) > 0 then
-      --diff = - diff
-    --end
-    --diff = math.max(-self.rotation_speed *dt, math.min(self.rotation_speed * dt, diff))
-    --diff = math.min(math.max(diff, -self.rotation_speed * dt), self.rotation_speed * dt) 
+    --might be better to do atan2(v2.y,v2.x) - atan2(v1.y,v1.x) for the angle, clamp the value, then
+    --rotate using the clamped angle 
     local rate = math.min((self.rotation_speed * dt) / diff, 1)
     self.transform.forward = self.transform.forward:lerp(target_angle, rate)
     --self.transform.forward = self.transform.forward:rotate(diff)

@@ -50,6 +50,9 @@ function EntityManager.findEntity(path, entity, depth)
   return nil
 end
 
+--[[TODO? I didn't think of this at first but I can just store entities in a table 
+mapping the table reference to the table itself. Use pairs() to iterate, delete by
+setting table values to nil. Not as efficient, but easier and cleaner]]
 function EntityManager.update(dt)
   local entities_to_destroy = {}
   local num_to_destroy = 0
