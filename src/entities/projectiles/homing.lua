@@ -3,7 +3,6 @@ local VectorLight = require 'lib/vector-light'
 local Timer = require 'lib/timer'
 local Physics = require "src/systems/physics-system"
 local EntityManager = require 'src/managers/entity-manager'
-local bezierToMesh = require('lib/utility').bezierToMesh
 local abs, atan2, max, min = math.abs, math.atan2, math.max, math.min
 local Entity = {}
 local Entity_mt = {}
@@ -28,14 +27,15 @@ local function bbox(self)
 end
 
 function Entity.onCollision(self, other, type)
-  if other == self.target then self.state = 5 end
+  if other == self.target then self.state = 4 end
 end
 
 
 function Entity.draw(self)
-  --love.graphics.line(self.curve:render())
-  self.mesh:setVertices(bezierToMesh(self.curve, 6))
-  love.graphics.draw(self.mesh)
+  local blend = love.graphics.getBlendMode()
+  love.graphics.setBlendMode("add")
+  love.graphics.draw(self.psystem)
+  love.graphics.setBlendMode(blend)
 end
 
 local function filter(self, other)
@@ -45,6 +45,9 @@ end
 
 function Entity.update(self, dt)
   local position = self.transform.position
+  self.psystem:setPosition(position:unpack())
+  self.psystem:update(dt)
+  self.psystem:emit(1)
   self.curve:setControlPoint(1, position:unpack())
   if self.state == 0 then
     local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
@@ -55,23 +58,13 @@ function Entity.update(self, dt)
       self.state = 1
       self.Timer:script(function(wait)
         self.Timer:tween(self.slow_time, self, {speed = self.min_speed}, 'linear')
-        wait(0.25)
-        self.Timer:tween(self.slow_time, self.mid, {speed = self.min_speed}, 'linear')
-        wait(0.25)
-        self.Timer:tween(self.slow_time, self.endp, {speed = self.min_speed}, 'linear')
-        wait(self.wait - 0.5)
+        wait(self.wait)
         self.state = 2
         self.Timer:tween(self.speedup_time, self, {speed = self.max_speed}, 'quad')
-        wait(0.25)
-        self.Timer:tween(self.speedup_time, self.mid, {speed = self.max_speed}, 'quad')
-        wait(0.25)
-        self.Timer:tween(self.speedup_time, self.endp, {speed = self.max_speed}, 'quad')
-        wait(0.25)
+        wait(0.75)
         self.state = 4
-        wait(1)
-        self.state = 5
         wait(4)
-        self.state = 6
+        self.state = 5
       end) 
     end
   elseif self.state == 1 then
@@ -94,23 +87,19 @@ function Entity.update(self, dt)
     local diff = desired - current
     if math.abs(diff) > math.pi then diff = -(diff - math.pi) end
     local rate = math.max(-self.rotation_speed * dt, math.min(self.rotation_speed * dt, diff))
+    print(desired, current, rate)
     self.transform.forward = self.transform.forward:rotate(rate)
-    self.last_rate = rate
     self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
   elseif self.state == 4 then
-    if self.last_rate then self.transform.forward = self.transform.forward:rotate(self.last_rate / 4) end
-    self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
-  elseif self.state == 5 then
-  elseif self.state == 6 then
+  else
     self.destroyed = true
+    if not self.children then return end
     for i, v in ipairs(self.children) do
       v.destroyed = true
     end
   end
   local x, y = self.transform.position:unpack()
   self.Timer:update(dt)
-  --self.Timer:after(0.25, function() self.curve:setControlPoint(2, x, y) end)
-  --self.Timer:after(0.5, function() self.curve:setControlPoint(3, x, y) end)
 end
 
 
@@ -149,32 +138,27 @@ function Entity.new(args)
   entity.slow_time = args.slow_time or 0.4
   entity.speedup_time = args.speedup_time or 0.2
   entity.rotation_speed = math.pi / 2
-  entity.mesh = love.graphics.newMesh(bezierToMesh(entity.curve, 6), 'strip', 'stream')
-  love.graphics.setPointSize(4)
-  local c = love.graphics.newCanvas(6, 6)
+
+
+  local c = love.graphics.newCanvas(12, 12)
   love.graphics.setCanvas(c)
-  love.graphics.rectangle('fill', 0, 0, 6, 6 )
+  love.graphics.circle('fill', 6, 6, 6 )
   love.graphics.setCanvas()
-  entity.mesh:setTexture(c)
+  entity.psystem = love.graphics.newParticleSystem(c, 100)
+  entity.psystem:setParticleLifetime(0.5, 0.5)
+  entity.psystem:setSizeVariation(1)
+  ---entity.psystem:setEmissionRate( 3000 )
 
-
+--[[
   local mid = {
     transform = {
       position = entity.transform.position:clone(),
       forward = Vec2(0, 0)
     },
-    update = function(self) 
-      entity.curve:setControlPoint(2, self.transform.position:unpack())
-      if self.velocity then
-        local x1, y1 = entity.curve:evaluate(0.5)
-        local x2, y2 = entity.curve:evaluate(0.4)
-        local dir = Vec2(x2 - x1, y2 - y1):normalize()
-        self.velocity = dir * self.speed
-
-      end
-    end,
+    body = entity.body,
+    update = function(self) self.transform.position.x, self.transform.position.y = entity.curve:evaluate(0.5) end,
     draw = function(self)    end,
-    speed = entity.speed
+    onCollision = Entity.onCollision
   }
   local endp = {
     transform = {
@@ -182,26 +166,13 @@ function Entity.new(args)
       forward = Vec2(0, 0)
     },
     body = entity.body,
-    update = function(self) 
-      entity.curve:setControlPoint(3, self.transform.position:unpack())
-      if self.velocity then
-        local x1, y1 = entity.curve:evaluate(1)
-        local x2, y2 = entity.curve:evaluate(0.9)
-        local dir = Vec2(x2 - x1, y2 - y1):normalize()
-        self.velocity = dir * self.speed
-      end
-    end,
+    update = function(self) self.transform.position.x, self.transform.position.y = entity.curve:evaluate(0.9) end,
     draw = function(self)  end,
-    onCollision = Entity.onCollision,
-    speed = entity.speed
+    onCollision = Entity.onCollision
   }
   entity.children = {mid, endp}
   EntityManager.add(mid)
-  EntityManager.add(endp)
-  entity.Timer:after(0.25, function() mid.velocity = Vec2(0, 0) end)
-  entity.Timer:after(0.5, function() endp.velocity = Vec2(0, 0) end)
-  entity.mid = mid
-  entity.endp = endp
+  EntityManager.add(endp)]]
   return setmetatable(entity, Entity_mt)
 end
 

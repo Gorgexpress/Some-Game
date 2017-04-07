@@ -1,5 +1,5 @@
 local floor = math.floor
-
+local Vec2 = require 'lib/vec2'
 local Utility = {}
 
 function Utility.vecToDir(v)
@@ -39,5 +39,50 @@ function Utility.bbox(v)
 	end
   return ulx, uly, lrx - ulx, lry - uly
 end
+--TODO clean up and refractor hard coded situations
+function Utility.bezierToMesh(curve, width)
+  width = width / 2
+  local x, y = curve:getControlPoint(1)
+  local trilist = {}
+  local right = true
+  local uvr = false
+  local uvl = true
+  for t=0, 0.9, 0.1 do
+    local x1, y1 = curve:evaluate(t)
+    local x2, y2 = curve:evaluate(t + 0.1)
+    local dir = Vec2(x2 - x1, y2 - y1):normalize()
+    local perp = dir:perpendicular()
+    if t == 0 then
+      local dx, dy = (perp * -width):unpack()
+      trilist[#trilist + 1] = {x1 + dx, y1 + dy, 0, 0}
+    end
+    if right then
+      local dx, dy = (perp * width):unpack()
+      if uvr then
+        trilist[#trilist + 1] = {x1 + dx, y1 + dy, 1, 0}
+      else
+        trilist[#trilist + 1] = {x1 + dx, y1 + dy, 0, 1}
+      end
+      uvr = not uvr
+    else
+      local dx, dy = (perp * -width):unpack()
+      if uvl then
+        trilist[#trilist + 1] = {x1 + dx, y1 + dy, 0, 0}
+      else
+        trilist[#trilist + 1] = {x1 + dx, y1 + dy, 1, 1}
+      end
+      uvl = not uvl
+    end
+    right = not right
+    if t > 0.85 then
+        --1,0 then 1,1
+      local dx, dy = (perp * width):unpack()
+      trilist[#trilist + 1] = {x2 + dx, y2 + dy, 1, 0}
+      dx, dy = (perp * -width):unpack()
+      trilist[#trilist + 1] = {x2 + dx, y2 + dy, 1, 1}
+    end
+  end
 
+  return trilist
+end
 return Utility
