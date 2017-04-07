@@ -40,8 +40,9 @@ end
 
 
 function Entity.onCollision(self, other, type)
-  if type == 'tile' or type == 'bump' then return end
-  if type ~= 'tile' then
+  if type == 'tile' or type == 'projectile' then return end
+  if type == 'p_projectile' then
+  elseif type == 'bumper' or type == 'bumped' then
     self.velocity = Vec2(0, 0)
     if type == 'bumper' then
       self.think_timer = 0.1

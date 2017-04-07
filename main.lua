@@ -58,6 +58,7 @@ local actions = {
   ["down"] = function() movement() end,
   ["right"] = function() movement() end,
   ['combo'] = function() g_player:action1() end,
+  ['combo2'] = function() g_player:action2() end,
   ["debug"] = function() debug = not debug end,
   ["pause"] = function() pause = not pause end,
 }

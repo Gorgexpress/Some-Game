@@ -39,6 +39,7 @@ local Player_mt = {}
 local SIN45 = 0.70710678118
 local CHARGE_TIME = 1
 local RATE_OF_FIRE = 0.2
+local MP_REGEN_RATE = 20
 
 
 local function playerFilter(self, other)
@@ -86,7 +87,6 @@ function Player.new(args)
     animations = animations,
     current = animations.idle_u
   }
-
   local entity = {
     transform = transform,
     body = body,
@@ -104,6 +104,8 @@ function Player.new(args)
     max_speed = 250,
     seconds_to_max_speed = 0.1,
     time_running = 0,
+    mp = 100,
+    mp_max = 100,
     --Unused right now. Will be used if I decide to factor in trajectory of the player in collisions.
     old_x = 0,
     old_y = 0
@@ -150,6 +152,7 @@ end
 function Player.update(self, dt)
   self.center.x = self.transform.position.x + self.body.offset.x + self.body.size.x * 0.5
   self.center.y = self.transform.position.y + self.body.offset.y + self.body.size.y * 0.5
+  self.mp = min(self.mp + MP_REGEN_RATE * dt, self.mp_max)
   self.timer:update(dt)
   self.old_x, self.old_y = self.transform.position.x + self.body.offset.x, self.transform.position.y + self.body.offset.y
   if self.state == 'running' and self.time_running < self.seconds_to_max_speed then
@@ -216,7 +219,7 @@ end
 
 function Player.action2(self)
   if self.charged then
-    --TODO have player use charged attack
+    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500, damage = 4, radius = 12})
     self.charged = false
   end
   if self.charge_handle then Timer.cancel(self.charge_handle) end

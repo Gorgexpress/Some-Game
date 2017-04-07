@@ -16,7 +16,7 @@ function Entity.draw(self)
   --TODO refractor all code related to drawing so that the get color is not needed
   local r, g, b, a = love.graphics.getColor()
   love.graphics.setColor(226, 88, 34)
-  love.graphics.circle('fill', self.transform.position.x, self.transform.position.y, self.body.size.x / 2)  
+  love.graphics.circle('fill', self.transform.position.x, self.transform.position.y, self.radius)  
   love.graphics.setColor(r, g, b, a) 
 end
 
@@ -32,24 +32,28 @@ function Entity.update(self, dt)
 end
 
 function Entity.new(args) 
-  local entity = {}
-  local size = args.size or 12
-  local half_size = size / 2
-  entity.body = args.body or {
-      size = Vec2(size, size),
-      offset = Vec2(-half_size, -half_size),
-      filter = args.filter or filter,
-      type = args.type or 'p_projectile',
-      damage = 1,
-      properties = {
-        damage = 1,
-      },
-  }
-  entity.transform = args.transform or {
+  local radius = args.radius or 6
+  local diameter = 2 * radius
+  local transform = args.transform or {
       position = args.position or Vec2(0, 0),
       forward = Vec2(0, -1),
   }
-  entity.velocity = args.velocity or Vec2(0, 0)
+  local body = {
+      size = Vec2(diameter, diameter),
+      offset = Vec2(-radius, -radius),
+      filter = args.filter or filter,
+      type = args.type or 'p_projectile',
+      damage = args.damage or 1,
+      properties = {
+        damage = args.damage or 1,
+      },
+  }
+  local entity = {
+    transform = transform,
+    body = body,
+    velocity = args.velocity or Vec2(0, 0),
+    radius = radius
+  }
   return setmetatable(entity, Entity_mt)
 end
 
