@@ -3,6 +3,7 @@ local VectorLight = require 'lib/vector-light'
 local Timer = require 'lib/timer'
 local Physics = require "src/systems/physics-system"
 local EntityManager = require 'src/managers/entity-manager'
+local bezierToMesh = require('lib/utility').bezierToMesh
 local abs, atan2, max, min = math.abs, math.atan2, math.max, math.min
 local Entity = {}
 local Entity_mt = {}
@@ -27,15 +28,14 @@ local function bbox(self)
 end
 
 function Entity.onCollision(self, other, type)
-  if other == self.target then self.state = 4 end
+  if other == self.target then self.state = 5 end
 end
 
 
 function Entity.draw(self)
-  local blend = love.graphics.getBlendMode()
-  love.graphics.setBlendMode("add")
-  love.graphics.draw(self.psystem)
-  love.graphics.setBlendMode(blend)
+  --love.graphics.line(self.curve:render())
+  self.mesh:setVertices(bezierToMesh(self.curve, 6))
+  love.graphics.draw(self.mesh)
 end
 
 local function filter(self, other)
@@ -45,9 +45,6 @@ end
 
 function Entity.update(self, dt)
   local position = self.transform.position
-  self.psystem:setPosition(position:unpack())
-  self.psystem:update(dt)
-  self.psystem:emit(1)
   self.curve:setControlPoint(1, position:unpack())
   if self.state == 0 then
     local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
@@ -63,8 +60,10 @@ function Entity.update(self, dt)
         self.Timer:tween(self.speedup_time, self, {speed = self.max_speed}, 'quad')
         wait(0.75)
         self.state = 4
-        wait(4)
+        wait(1)
         self.state = 5
+        wait(4)
+        self.state = 6
       end) 
     end
   elseif self.state == 1 then
@@ -87,19 +86,38 @@ function Entity.update(self, dt)
     local diff = desired - current
     if math.abs(diff) > math.pi then diff = -(diff - math.pi) end
     local rate = math.max(-self.rotation_speed * dt, math.min(self.rotation_speed * dt, diff))
-    print(desired, current, rate)
     self.transform.forward = self.transform.forward:rotate(rate)
+    self.last_rate = rate
     self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
   elseif self.state == 4 then
-  else
+    if self.last_rate then self.transform.forward = self.transform.forward:rotate(self.last_rate / 4) end
+    self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
+  elseif self.state == 5 then
+  elseif self.state == 6 then
     self.destroyed = true
-    if not self.children then return end
     for i, v in ipairs(self.children) do
       v.destroyed = true
     end
   end
   local x, y = self.transform.position:unpack()
   self.Timer:update(dt)
+  if self.flag then
+    local idx = #self.prev / 2
+    if idx % 2 == 0 then idx = idx + 1 end
+    self.mid.transform.position.x, self.mid.transform.position.y = self.prev[idx], self.prev[idx + 1]
+  end
+  if not self.prevsize then
+    local s = #self.prev
+    self.prev[s + 1] = x 
+    self.prev[s + 2] = y 
+  else
+    self.mid.transform.position.x, self.mid.transform.position.y = self.prev[self.mid_idx], self.prev[self.mid_idx + 1]
+    self.endp.transform.position.x, self.endp.transform.position.y = self.prev[1], self.prev[2]
+    table.remove(self.prev, 1)
+    table.remove(self.prev, 1)
+    self.prev[self.prevsize - 1] = x 
+    self.prev[self.prevsize] = y 
+  end
 end
 
 
@@ -138,27 +156,27 @@ function Entity.new(args)
   entity.slow_time = args.slow_time or 0.4
   entity.speedup_time = args.speedup_time or 0.2
   entity.rotation_speed = math.pi / 2
-
-
-  local c = love.graphics.newCanvas(12, 12)
+  entity.mesh = love.graphics.newMesh(bezierToMesh(entity.curve, 6), 'strip', 'stream')
+  love.graphics.setPointSize(4)
+  local c = love.graphics.newCanvas(6, 6)
   love.graphics.setCanvas(c)
-  love.graphics.circle('fill', 6, 6, 6 )
+  love.graphics.rectangle('fill', 0, 0, 6, 6 )
   love.graphics.setCanvas()
-  entity.psystem = love.graphics.newParticleSystem(c, 100)
-  entity.psystem:setParticleLifetime(0.5, 0.5)
-  entity.psystem:setSizeVariation(1)
-  ---entity.psystem:setEmissionRate( 3000 )
+  entity.mesh:setTexture(c)
 
---[[
+
   local mid = {
     transform = {
       position = entity.transform.position:clone(),
       forward = Vec2(0, 0)
     },
-    body = entity.body,
-    update = function(self) self.transform.position.x, self.transform.position.y = entity.curve:evaluate(0.5) end,
+    body = body,
+    update = function(self) 
+      entity.curve:setControlPoint(2, self.transform.position:unpack())
+      
+    end,
     draw = function(self)    end,
-    onCollision = Entity.onCollision
+    onCollision = Entity.onCollision,
   }
   local endp = {
     transform = {
@@ -166,13 +184,27 @@ function Entity.new(args)
       forward = Vec2(0, 0)
     },
     body = entity.body,
-    update = function(self) self.transform.position.x, self.transform.position.y = entity.curve:evaluate(0.9) end,
+    update = function(self) 
+      entity.curve:setControlPoint(3, self.transform.position:unpack())
+
+    end,
     draw = function(self)  end,
-    onCollision = Entity.onCollision
+    onCollision = Entity.onCollision,
   }
   entity.children = {mid, endp}
   EntityManager.add(mid)
-  EntityManager.add(endp)]]
+  EntityManager.add(endp)
+  entity.Timer:after(0.25, function() entity.half = true end)
+  entity.Timer:after(0.5, function() 
+    entity.half = false
+    entity.prevsize = #entity.prev
+    entity.mid_idx = math.floor(entity.prevsize / 2)
+    if entity.mid_idx % 2 == 0 then entity.mid_idx = entity.mid_idx + 1 end
+    end)
+  entity.mid = mid
+  entity.endp = endp
+  entity.flag = false
+  entity.prev = {}
   return setmetatable(entity, Entity_mt)
 end
 
