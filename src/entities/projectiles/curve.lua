@@ -3,7 +3,7 @@ local VectorLight = require 'lib/vector-light'
 local Timer = require 'lib/timer'
 local Physics = require "src/systems/physics-system"
 local EntityManager = require 'src/managers/entity-manager'
-local abs, atan, max, min = math.abs, math.atan, math.max, math.min
+local abs, atan2, max, min = math.abs, math.atan2, math.max, math.min
 local Entity = {}
 local Entity_mt = {}
 
@@ -67,17 +67,21 @@ function Entity.update(self, dt)
     self.transform.forward.x , self.transform.forward.y = dirx, diry
     self.velocity.x , self.velocity.y = dirx * self.speed , diry * self.speed
   elseif self.state == 2 then
+    --[[
     local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
     local dirx, diry = Vec2(dx, dy):normalize():unpack()
     local forward = self.transform.forward
     local current_angle = forward:to_polar()
     local target_angle = Vec2(dirx, diry)
     local diff = forward:angle_between(target_angle)
-    --might be better to do atan2(v2.y,v2.x) - atan2(v1.y,v1.x) for the angle, clamp the value, then
-    --rotate using the clamped angle 
     local rate = math.min((self.rotation_speed * dt) / diff, 1)
-    self.transform.forward = self.transform.forward:lerp(target_angle, rate)
-    --self.transform.forward = self.transform.forward:rotate(diff)
+    self.transform.forward = self.transform.forward:lerp(target_angle, rate)]]
+    local desired = atan2(self.target.center.y - position.y, self.target.center.x - position.x)
+    local current = atan2(self.transform.forward.y, self.transform.forward.x)
+    local diff = desired - current
+    if math.abs(diff) > math.pi then diff = diff % math.pi end
+    local rate = math.max(-self.rotation_speed * dt, math.min(self.rotation_speed * dt, diff))
+    self.transform.forward = self.transform.forward:rotate(rate)
     self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
   elseif self.state == 4 then
   else
