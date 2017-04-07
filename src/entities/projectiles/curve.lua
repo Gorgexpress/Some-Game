@@ -36,6 +36,8 @@ function Entity.draw(self)
   --love.graphics.line(self.curve:render())
   self.mesh:setVertices(bezierToMesh(self.curve, 6))
   love.graphics.draw(self.mesh)
+  love.graphics.circle('fill', self.transform.position.x, self.transform.position.y, 3)
+  love.graphics.circle('fill', self.endp.transform.position.x, self.endp.transform.position.y, 3)
 end
 
 local function filter(self, other)
@@ -55,18 +57,18 @@ function Entity.update(self, dt)
       self.state = 1
       self.Timer:script(function(wait)
         self.Timer:tween(self.slow_time, self, {speed = self.min_speed}, 'linear')
-        wait(0.25)
+        wait(0.2)
         self.Timer:tween(self.slow_time, self.mid, {speed = self.min_speed}, 'linear')
-        wait(0.25)
+        wait(0.2)
         self.Timer:tween(self.slow_time, self.endp, {speed = self.min_speed}, 'linear')
-        wait(self.wait - 0.5)
+        wait(self.wait - 0.4)
         self.state = 2
         self.Timer:tween(self.speedup_time, self, {speed = self.max_speed}, 'quad')
-        wait(0.25)
+        wait(0.15)
         self.Timer:tween(self.speedup_time, self.mid, {speed = self.max_speed}, 'quad')
-        wait(0.25)
+        wait(0.15)
         self.Timer:tween(self.speedup_time, self.endp, {speed = self.max_speed}, 'quad')
-        wait(0.25)
+        wait(0.75 - 0.3)
         self.state = 4
         wait(1)
         self.state = 5
@@ -98,7 +100,7 @@ function Entity.update(self, dt)
     self.last_rate = rate
     self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
   elseif self.state == 4 then
-    if self.last_rate then self.transform.forward = self.transform.forward:rotate(self.last_rate / 4) end
+    if self.last_rate then self.transform.forward = self.transform.forward:rotate(self.last_rate / 2) end
     self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
   elseif self.state == 5 then
   elseif self.state == 6 then
