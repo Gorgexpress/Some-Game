@@ -29,12 +29,17 @@ local Utility = require 'lib/utility'
 local Signal = require 'lib/signal'
 local vecToDir = Utility.vecToDir
 local grid = anim8.newGrid(40, 40, image:getWidth(), image:getHeight())
-local SIN45 = 0.70710678118
 local Entity = require 'src/managers/entity-manager'
 local SoundManager = require 'src/managers/sound-manager'
 local max, min = math.max, math.min
+
 local Player = {}
 local Player_mt = {}
+
+local SIN45 = 0.70710678118
+local CHARGE_TIME = 1
+local RATE_OF_FIRE = 0.2
+
 
 local function playerFilter(self, other)
   if other.body and other.body.type == 'projectile' then
@@ -202,7 +207,19 @@ function Player.move(self, dir_x, dir_y)
 end
 
 function Player.action1(self)
-  Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 150})
+  if self.rate_limited then return end
+  Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500})
+  self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
+  self.rate_limited = true
+  Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
+end
+
+function Player.action2(self)
+  if self.charged then
+    --TODO have player use charged attack
+    self.charged = false
+  end
+  if self.charge_handle then Timer.cancel(self.charge_handle) end
 end
 
 
@@ -211,7 +228,7 @@ end
 Player_mt.__index = Player
 
 function Player_mt.__call(_, args)
-    return Player.new(args)
+  return Player.new(args)
 end
 
 return setmetatable({}, Player_mt)
