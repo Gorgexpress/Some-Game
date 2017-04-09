@@ -5,8 +5,11 @@ local gamera = require 'lib/gamera'
 local Entity = require 'src/managers/entity-manager'
 local Timer = require 'lib/timer'
 local Vec2 = require 'lib/vec2'
+local UI = require 'src/managers/ui'
 local debug = false
 local pause = false
+
+local player 
 
 function love.load()
   map = sti("assets/maps/test.lua", {"bump"})
@@ -15,7 +18,8 @@ function love.load()
   world.height = map.height * map.tileheight
   Entity.setWorld(map)
 
-  g_player = Entity.add('player', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y)})
+  player = Entity.add('player', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y)})
+  g_player = player
   Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
   Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
   camera = gamera.new(0, 0, world.width, world.height)
@@ -38,6 +42,7 @@ function love.draw()
     end
     if debug then Entity.drawCollision() end
   end)
+  UI.draw(player)
   love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end
 

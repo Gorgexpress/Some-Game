@@ -37,9 +37,12 @@ local Player = {}
 local Player_mt = {}
 
 local SIN45 = 0.70710678118
+local STUN_TIME = 0.75
+local INVINCIBILITY_TIME = 1.5
 local CHARGE_TIME = 1
 local RATE_OF_FIRE = 0.2
-local MP_REGEN_RATE = 20
+local MP_REGEN_RATE = 35
+local MP_COST = 20
 
 
 local function playerFilter(self, other)
@@ -68,6 +71,7 @@ function Player.new(args)
     offset = Vec2(4, 8),
     filter = playerFilter,
     type = 'player',
+    damage = 1,
     properties = {
       damage = 1,
       knockback = 500,
@@ -105,16 +109,20 @@ function Player.new(args)
     seconds_to_max_speed = 0.1,
     time_running = 0,
     mp = 100,
-    mp_max = 100,
+    max_mp = 100,
+    stunned_timer = 0,
     --Unused right now. Will be used if I decide to factor in trajectory of the player in collisions.
     old_x = 0,
-    old_y = 0
+    old_y = 0,
+    render = true,
   }
   return setmetatable(entity, Player_mt)
 end
 
 function Player.draw(self)
-  self.animator.current:draw(self.sprite, self.transform.position:unpack())
+  if self.render then
+    self.animator.current:draw(self.sprite, self.transform.position:unpack())
+  end
 end
 
 function Player.onCollision(self, other, type)
@@ -123,36 +131,35 @@ function Player.onCollision(self, other, type)
       self.time_running = 0
       SoundManager.playSound('bump')
       --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
-    elseif type == 'bumped' and state ~= 'knockbacked' then
-      SoundManager.playSound('hurt')
-      self.state = 'knockbacked'
-      local info = other.body.properties
-      self.velocity = other.transform.forward:normalize() * 250
-      self.health = self.health - info.damage
+    elseif type == 'bumped' and state ~= 'knockbacked' and not self.is_invincible then
       --TODO? use tweening instead with some kind of interpolation that makes it seem 
       --like there is friction(entity slows down before stopping, instead of stopping suddenly)
-      self.timer:after(0.2, function() 
-        if self.state == 'knockbacked' then
-          self.state = 'idle' 
-          movement() 
-        end
-      end)
+      SoundManager.playSound('hurt')
+      self.health = max(self.health - other.body.damage or 0, 0) 
+      self.velocity = other.transform.forward * 250
+      self.state = 'stunned'
+      self.stunned_timer = STUN_TIME
+      self.invincibility_timer = INVINCIBILITY_TIME
+      self.is_invincible = true
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
-    elseif type == 'projectile' then
-      if other.body.damage then 
-        self.health = max(self.health - other.body.properties.damage, 0) 
-      end
+    elseif type == 'projectile' and not self.is_invincible then
+      self.health = max(self.health - other.body.damage or 0, 0) 
+      self.velocity = Vec2(0, 0)
+      self.state = 'stunned'
+      self.stunned_timer = STUN_TIME
+      self.is_invincible = true
+      self.invincibility_timer = INVINCIBILITY_TIME
     end
   end
   if self.health <= 0 then
-
+    --die
   end
 end
 
 function Player.update(self, dt)
   self.center.x = self.transform.position.x + self.body.offset.x + self.body.size.x * 0.5
   self.center.y = self.transform.position.y + self.body.offset.y + self.body.size.y * 0.5
-  self.mp = min(self.mp + MP_REGEN_RATE * dt, self.mp_max)
+  self.mp = min(self.mp + MP_REGEN_RATE * dt, self.max_mp)
   self.timer:update(dt)
   self.old_x, self.old_y = self.transform.position.x + self.body.offset.x, self.transform.position.y + self.body.offset.y
   if self.state == 'running' and self.time_running < self.seconds_to_max_speed then
@@ -162,6 +169,21 @@ function Player.update(self, dt)
   end
   if self.state == 'idle' or self.state == 'running' then
 
+  end
+  if self.state == 'stunned' then
+    self.stunned_timer = max(self.stunned_timer - dt, 0)
+    if self.stunned_timer == 0 then 
+      self.state = 'idle'
+      movement() 
+    end
+  end
+  if self.is_invincible then
+    self.render = not self.render
+    self.invincibility_timer = max(self.invincibility_timer - dt, 0)
+    if self.invincibility_timer  == 0 then 
+      self.is_invincible = false 
+      self.render = true 
+    end
   end
 end
 
@@ -211,7 +233,10 @@ end
 
 function Player.action1(self)
   if self.rate_limited then return end
-  Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500})
+  if self.mp >= MP_COST then
+    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500})
+    self.mp = self.mp - MP_COST
+  end
   self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
   self.rate_limited = true
   Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
@@ -219,7 +244,10 @@ end
 
 function Player.action2(self)
   if self.charged then
-    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500, damage = 4, radius = 12})
+    if self.mp >= MP_COST * 3 then
+      Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500, damage = 4, radius = 12})
+      self.mp = self.mp - MP_COST * 3
+    end
     self.charged = false
   end
   if self.charge_handle then Timer.cancel(self.charge_handle) end

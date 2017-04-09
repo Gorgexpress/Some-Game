@@ -74,7 +74,8 @@ function Entity.update(self, dt)
         local cx, cy = (vertices[1] + vertices[3]) / 2, (vertices[2] + vertices[4]) / 2
         local after = function()
           local v = (self.target.center - Vec2(cx, cy)):normalize() * self.vel:len()
-          EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, wait = self.wait}))
+          EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, 
+            wait = self.wait, linger_time = self.linger_time, expand_time = self.expand_time}))
         end
         if self.wait <= 0 then
           after()
@@ -84,6 +85,10 @@ function Entity.update(self, dt)
       end
     end
   elseif self.state == 2 then
+    if self.linger_time > 0 then
+      self.linger_time = self.linger_time - dt
+      return
+    end
     self.timer = self.timer - dt
     if self.timer <= 0 then self.state = 3 end
     --only the back of the laser moves, causing it to shorten
@@ -93,6 +98,8 @@ function Entity.update(self, dt)
     self.destroyed = true
   end
 end
+
+
 
 function Entity.new(args) 
   local width = args.width or 4
@@ -107,6 +114,9 @@ function Entity.new(args)
   local x2, y2 = x - half_width * forward.y, y + half_width * forward.x
   local dx, dy = x2 - x1, y2 - y1
 
+  local linger_time = args.iterations > 0 and (args.linger_time or 0) or 0
+  local wait = args.wait or 0.35
+  if linger_time > wait then linger_time = wait end
   local transform = args.transform or {
     position = Vec2(x1, y1),
     forward = forward
@@ -128,13 +138,15 @@ function Entity.new(args)
     body = body,
     vel = velocity,
     target = args.target or g_player,
+    expand_time = args.expand_time or 0.35,
     iterations = args.iterations or 0,
     iterate_time = args.iterate_time or 1,
-    wait = args.wait or 0.35,
+    wait = wait or 0.35,
     parent = args.parent or nil,
     active = true,
-    timer = args.timer or 0.5,
-    state = 0
+    timer = args.expand_time or 0.35,
+    state = 0,
+    linger_time = linger_time
   }
   return setmetatable(entity, Entity_mt)
 end

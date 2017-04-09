@@ -34,11 +34,11 @@ function Entity.think(self)
   else 
     if dx * dx + dy * dy > self.seal_range2 then
       local position = self.transform.position + self.body.offset + self.body.size * 0.5
-      local velocity = (self.target.center - position):normalize() * 150
+      local velocity = (self.target.center - position):normalize() * -750
       --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
-      --EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 2})
-      EntityManager.add('projectiles/curve', {position = position})
-      --EntityManager.add('projectiles/homing', {position = position})
+      EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1, iterate_time = 0.1, wait = 1, expand_time = 0.1})
+      --EntityManager.add('projectiles/curve', {position = position})
+      --EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
     end
     self.think_timer = self.attack_timer
     facePlayer(self, dx, dy)
@@ -49,6 +49,7 @@ end
 function Entity.onCollision(self, other, type)
   if type == 'tile' or type == 'projectile' then return end
   if type == 'p_projectile' then
+    self.health = math.max(self.health - other.body.damage or 0, 0)
   elseif type == 'bumper' or type == 'bumped' then
     self.velocity = Vec2(0, 0)
     if type == 'bumper' then
@@ -57,14 +58,14 @@ function Entity.onCollision(self, other, type)
       self.state = 'bump'
       self.velocity = -self.transform.forward:normalize() * 250
     elseif type == 'bumped' then 
-      local info = other.body.properties
       self.think_timer = 0.2
       self.attacking = false
       self.state = 'bump'
-      self.health = self.health - info.damage
-      self.velocity = other.transform.forward:normalize() * info.knockback
+      self.health = math.max(self.health - other.body.damage or 0, 0)
+      self.velocity = other.transform.forward:normalize() * 500
     end
   end
+  if self.health <= 0 then self.destroyed = true end
 end
 
 function Entity.draw(self)
@@ -95,6 +96,7 @@ function Entity.new(args)
     offset = Vec2(0, 0),
     filter = filter,
     type = 'bump',
+    damage = 1,
     properties = {
       damage = 1,
     }

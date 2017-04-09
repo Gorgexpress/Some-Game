@@ -307,4 +307,8 @@ function PhysicsSystem.drawCollision(entities, num_entities)
   love.graphics.setColor(r, g, b, a)
 end
 
+function PhysicsSystem.querySegment(x1, y1, x2, y2, filter)
+  return m_physics:querySegment(x1, y1, x2, y2, filter)
+end
+
 return PhysicsSystem
