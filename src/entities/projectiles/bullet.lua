@@ -17,7 +17,7 @@ function Entity.draw(self)
 end
 
 local function filter(self, other)
-  if other.properties or other == self.target then
+  if other.properties or (other.Body and other.Body.type == 'player') then
     return 'cross'
   end
   return nil 
@@ -33,7 +33,7 @@ function Entity.new(args)
     position = args.position or Vec2(0, 0),
     forward = Vec2(0, -1),
   }
-  local body = {
+  local body = args.body or {
     size = Vec2(6, 6),
     offset = Vec2(0, 0),
     filter = args.filter or filter,
@@ -43,7 +43,7 @@ function Entity.new(args)
       damage = 1
     }
   }
-
+  if not body.filter then body.filter = filter end
   if args.position then
     transform.position = transform.position - body.size * 0.5
   end
@@ -52,7 +52,8 @@ function Entity.new(args)
     Transform = transform,
     Body = body,
     Velocity = args.velocity or Vec2(0, 0),
-    target = args.target or g_player
+    target = args.target or g_player,
+    update = args.update
   }
 
   return setmetatable(entity, Entity_mt)

@@ -22,6 +22,7 @@ function love.load()
   g_player = player
   Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
   Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
+  --Entity.add('enemies/bosses/boss1', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y - 250)})
   camera = gamera.new(0, 0, world.width, world.height)
   camera:setPosition(g_player.Transform.position.x, g_player.Transform.position.y)
 end

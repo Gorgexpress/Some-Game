@@ -28,14 +28,57 @@ local function shorten(v, dx, dy)
   v[5], v[6], v[7], v[8] = v[5] + dx, v[6] + dy, v[7] + dx, v[8] + dy
 end
 
-local function update(self, dt)
+--spawns another laser
+local function iterate(self)
+  local vertices = self.Body.polygon
+  local cx, cy = (vertices[1] + vertices[3]) / 2, (vertices[2] + vertices[4]) / 2
+  local after = function()
+    local v = (self.target.center - Vec2(cx, cy)):normalize() * self.velocity:len()
+    EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, 
+      spawn_time = self.spawn_time, linger_time = self.linger_time, extend_time = self.extend_time, move_time = self.move_time}))
+  end
+  if self.spawn_time <= 0 then
+    after()
+  else
+    EntityManager.add('projectiles/spawner', {after = after, time = self.spawn_time, position = Vec2(cx, cy)})
+  end
+end
 
+--[[this function will be passed to Timer.script and handles 
+all stage changes(with the exception of collision which forces the laser
+into the "shorten" state, all state changes are time based).]]
+local function scriptUpdate(self)
+  return
+  function(wait)
+    --extend laser by only moving the front 2 vertices
+    wait(self.extend_time)
+    --move entire laser
+    self.state = 'move'
+    --no more logic if no iterations, just move the laser normally until it is destroyed by collision
+    if self.iterations == 0 then return end 
+    --time spent normally moving the entire laser
+    wait(self.move_time)
+    --spawns another laser (a separate entity) from the current one
+    iterate(self) 
+    --determine when the back vertices will touch the front ones
+    local shorten_time = abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x)
+    --linger_time causes the laser to delay moving to the shorten state. None of the vertices move in this state
+    if self.linger_time > 0 then
+      self.state = 'linger'
+      wait(self.linger_time)
+    end
+    --shorten laser until there's nothing left then destroy it
+    self.state = 'shorten'
+    wait(shorten_time)
+    self.state = 'destroyed'
+    end
 end
 
 function Entity.onCollision(self, other, type)
-  if type == 'tile' and self.state < 3 then
-    self.state = 2
-    self.timer = abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x)
+  if type == 'tile' and self.state ~= 'shorten' then
+    self.state = 'shorten'
+    self.Timer:clear()
+    self.Timer:after(abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x), function() self.state = 'destroyed' end)
   elseif type == 'player' then
   end
 end
@@ -51,46 +94,20 @@ local function filter(self, other)
 end
 
 function Entity.update(self, dt)
+  self.Timer:update(dt)
   local vertices = self.Body.polygon
   local dx, dy = self.velocity.x * dt, self.velocity.y * dt
-  if self.state == 0 then 
-    self.timer = self.timer - dt
-    if self.timer <= 0 then 
-      self.timer = self.iterate_time
-      self.state = 1 
-    end
+  if self.state == 'extend' then 
     --only the front of the laser is moving(causing the polygon to extend)
     extend(vertices, dx, dy)
     updateBoundingBox(self)
-  elseif self.state == 1 then
+  elseif self.state == 'move' then
     move(vertices, dx, dy)
     --no need to update the bounding box in this case, just move it with velocity
     self.Transform.position.x, self.Transform.position.y = self.Transform.position.x + dx, self.Transform.position.y + dy
-    if self.iterations > 0 then
-      self.timer = self.timer - dt
-      if self.timer <= 0 then
-        self.state = 2
-        self.timer = abs((vertices[3] - vertices[5]) / self.velocity.x)
-        local cx, cy = (vertices[1] + vertices[3]) / 2, (vertices[2] + vertices[4]) / 2
-        local after = function()
-          local v = (self.target.center - Vec2(cx, cy)):normalize() * self.velocity:len()
-          EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, 
-            wait = self.wait, linger_time = self.linger_time, expand_time = self.expand_time}))
-        end
-        if self.wait <= 0 then
-          after()
-        else
-          EntityManager.add('projectiles/spawner', {after = after, time = self.wait, position = Vec2(cx, cy)})
-        end
-      end
-    end
-  elseif self.state == 2 then
-    if self.linger_time > 0 then
-      self.linger_time = self.linger_time - dt
-      return
-    end
-    self.timer = self.timer - dt
-    if self.timer <= 0 then self.state = 3 end
+  elseif self.state == 'linger' then
+    --nothing needs to be done
+  elseif self.state == 'shorten' then
     --only the back of the laser moves, causing it to shorten
     shorten(vertices, dx, dy)
     updateBoundingBox(self)
@@ -114,9 +131,6 @@ function Entity.new(args)
   local x2, y2 = x - half_width * forward.y, y + half_width * forward.x
   local dx, dy = x2 - x1, y2 - y1
 
-  local linger_time = args.iterations > 0 and (args.linger_time or 0) or 0
-  local wait = args.wait or 0.35
-  if linger_time > wait then linger_time = wait end
   local transform = args.transform or {
     position = Vec2(x1, y1),
     forward = forward
@@ -138,16 +152,18 @@ function Entity.new(args)
     Body = body,
     velocity = velocity, --lowercase v, not a component!
     target = args.target or g_player,
-    expand_time = args.expand_time or 0.35,
-    iterations = args.iterations or 0,
-    iterate_time = args.iterate_time or 1,
-    wait = wait or 0.35,
+    extend_time = args.extend_time or 0.2,
+    iterations = args.iterations or 1,
+    spawn_time = args.spawn_time or 1,
+    move_time = args.move_time or 0.1,
     parent = args.parent or nil,
     active = true,
-    timer = args.expand_time or 0.35,
-    state = 0,
-    linger_time = linger_time
+    state = 'extend',
+    linger_time = args.linger_time or 0,
+    Timer = Timer.new(),
   }
+
+  entity.Timer:script(scriptUpdate(entity))
   return setmetatable(entity, Entity_mt)
 end
 

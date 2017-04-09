@@ -5,14 +5,14 @@ local Draw = {}
 
 function Draw.drawLaser(color) return
   function(self)
-    polygon('fill', unpack(self.body.polygon))  
+    polygon('fill', unpack(self.Body.polygon))  
   end
 end
 
 function Draw.drawCircle(mode, radius, r, g, b, a) return
   function(self)
     setColor(r, g, b, a)
-    circle(mode, self.transform.position.x, self.transform.position.y, radius)  
+    circle(mode, self.Transform.position.x, self.Transform.position.y, radius)  
   end
 end
 

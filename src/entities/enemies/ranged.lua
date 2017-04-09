@@ -8,9 +8,9 @@ local Entity = {}
 local Entity_mt = {}
 
 local DEFAULT_AGGRO_RANGE = 500
-
 local DEFAULT_THINK_TIMER = 0.5
 local DEFAULT_ATTACK_TIMER = 2
+local DEAGGRO_RANGE2 = 1500 * 1500
 
 local function facePlayer(self, dx, dy) 
   local forward = Vec2(dx, dy):normalize()
@@ -25,20 +25,23 @@ function Entity.think(self)
   if self.state == 'hurt' or self.state =='melee' then return end
   self.Velocity.x, self.Velocity.y = 0, 0
   local dx, dy =  self.target.center.x - self.Transform.position.x, self.target.center.y - self.Transform.position.y
+  local dist2 = dx * dx + dy * dy
   if not self.attacking then
-    if dx * dx + dy * dy < self.aggro_range2 then
+    if dist2 < self.aggro_range2 then
       self.attacking = true
       self.think_timer = self.attack_timer
       facePlayer(self, dx, dy)
     end
-  else 
-    if dx * dx + dy * dy > self.seal_range2 then
+  else
+    if dist2 > DEAGGRO_RANGE2 then
+      self.attacking = false
+    elseif dist2 > self.seal_range2 then
       local position = self.Transform.position + self.Body.offset + self.Body.size * 0.5
       local velocity = (self.target.center - position):normalize() * -750
-      EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
-      EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1, iterate_time = 0.1, wait = 1, expand_time = 0.1})
-      EntityManager.add('projectiles/curve', {position = position})
-      EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
+      --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
+      EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1})
+      --EntityManager.add('projectiles/curve', {position = position})
+      --EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
     end
     self.think_timer = self.attack_timer
     facePlayer(self, dx, dy)
