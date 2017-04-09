@@ -23,7 +23,7 @@ function love.load()
   Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
   Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
   camera = gamera.new(0, 0, world.width, world.height)
-  camera:setPosition(g_player.transform.position.x, g_player.transform.position.y)
+  camera:setPosition(g_player.Transform.position.x, g_player.Transform.position.y)
 end
     
 function love.update(dt)
@@ -33,7 +33,7 @@ function love.update(dt)
 end
 
 function love.draw()
-  camera:setPosition(g_player.transform.position.x, g_player.transform.position.y) 
+  camera:setPosition(player.Transform.position.x, player.Transform.position.y) 
   camera:draw(function(l, t, w, h)
     map:setDrawRange(l, t, w, h)
     map:draw()
@@ -62,8 +62,8 @@ local actions = {
   ["left"] = function() movement() end,
   ["down"] = function() movement() end,
   ["right"] = function() movement() end,
-  ['combo'] = function() g_player:action1() end,
-  ['combo2'] = function() g_player:action2() end,
+  ['combo'] = function() player:action1() end,
+  ['combo2'] = function() player:action2() end,
   ["debug"] = function() debug = not debug end,
   ["pause"] = function() pause = not pause end,
 }
@@ -75,7 +75,7 @@ function movement()
   if input_state['right'] then uvx = uvx + 1 end 
   if input_state['down'] then uvy = uvy + 1 end
   if input_state['left'] then uvx = uvx - 1 end
-  g_player:move(uvx, uvy)
+  player:move(uvx, uvy)
 end
 
 

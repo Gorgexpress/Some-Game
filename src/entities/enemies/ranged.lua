@@ -15,16 +15,16 @@ local DEFAULT_ATTACK_TIMER = 2
 local function facePlayer(self, dx, dy) 
   local forward = Vec2(dx, dy):normalize()
   if abs(forward.x) > abs(forward.y) then
-    self.transform.forward = Vec2(round(forward.x), 0)
+    self.Transform.forward = Vec2(round(forward.x), 0)
   else
-    self.transform.forward = Vec2(0, round(forward.y))
+    self.Transform.forward = Vec2(0, round(forward.y))
   end
 end
 
 function Entity.think(self)
   if self.state == 'hurt' or self.state =='melee' then return end
-  self.velocity.x, self.velocity.y = 0, 0
-  local dx, dy =  self.target.center.x - self.transform.position.x, self.target.center.y - self.transform.position.y
+  self.Velocity.x, self.Velocity.y = 0, 0
+  local dx, dy =  self.target.center.x - self.Transform.position.x, self.target.center.y - self.Transform.position.y
   if not self.attacking then
     if dx * dx + dy * dy < self.aggro_range2 then
       self.attacking = true
@@ -33,12 +33,12 @@ function Entity.think(self)
     end
   else 
     if dx * dx + dy * dy > self.seal_range2 then
-      local position = self.transform.position + self.body.offset + self.body.size * 0.5
+      local position = self.Transform.position + self.Body.offset + self.Body.size * 0.5
       local velocity = (self.target.center - position):normalize() * -750
-      --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
+      EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
       EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1, iterate_time = 0.1, wait = 1, expand_time = 0.1})
-      --EntityManager.add('projectiles/curve', {position = position})
-      --EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
+      EntityManager.add('projectiles/curve', {position = position})
+      EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
     end
     self.think_timer = self.attack_timer
     facePlayer(self, dx, dy)
@@ -49,32 +49,32 @@ end
 function Entity.onCollision(self, other, type)
   if type == 'tile' or type == 'projectile' then return end
   if type == 'p_projectile' then
-    self.health = math.max(self.health - other.body.damage or 0, 0)
+    self.health = math.max(self.health - other.Body.damage or 0, 0)
   elseif type == 'bumper' or type == 'bumped' then
-    self.velocity = Vec2(0, 0)
+    self.Velocity = Vec2(0, 0)
     if type == 'bumper' then
       self.think_timer = 0.1
       self.attacking = false
       self.state = 'bump'
-      self.velocity = -self.transform.forward:normalize() * 250
+      self.Velocity = -self.Transform.forward:normalize() * 250
     elseif type == 'bumped' then 
       self.think_timer = 0.2
       self.attacking = false
       self.state = 'bump'
-      self.health = math.max(self.health - other.body.damage or 0, 0)
-      self.velocity = other.transform.forward:normalize() * 500
+      self.health = math.max(self.health - other.Body.damage or 0, 0)
+      self.Velocity = other.Transform.forward:normalize() * 500
     end
   end
   if self.health <= 0 then self.destroyed = true end
 end
 
 function Entity.draw(self)
-  love.graphics.rectangle('fill', self.transform.position.x, self.transform.position.y, self.body.size:unpack())   
+  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
 end
 
 local function filter(self, other)
-  if not other.body or other.body.type == 'player' then return 'slide'
-  elseif other.body.type == 'projectile' then return nil
+  if not other.Body or other.Body.type == 'player' then return 'slide'
+  elseif other.Body.type == 'projectile' then return nil
   else return 'cross'
   end
 end
@@ -104,9 +104,9 @@ function Entity.new(args)
   local aggro_range = args.aggro_range or DEFAULT_AGGRO_RANGE
   local seal_range = args.seal_range or 60
   local entity = {
-    transform = transform,
-    body = body,
-    velocity = args.velocity or Vec2(0, 0),
+    Transform = transform,
+    Body = body,
+    Velocity = args.velocity or Vec2(0, 0),
     state = 'idle',
     think_timer = args.think_timer or DEFAULT_THINK_TIMER, 
     think_time = args.think_time or DEFAULT_THINK_TIMER,

@@ -12,37 +12,36 @@ local function filter(self, other)
 end
 
 local function targetFilter(self, other)
-  if other and other.body and other.body.type == 'player' then return 'cross' end
+  if other and other.Body and other.Body.type == 'player' then return 'cross' end
   return nil
 end
 
 
 function Entity.onCollision(self, other, type)
-  if other.properties or other.body.type == 'player' then
+  if other.properties or other.Body.type == 'player' then
     self.destroyed = true
   end
 end
 
 function Entity.draw(self)
-  love.graphics.rectangle('fill', self.transform.position.x, self.transform.position.y, self.body.size:unpack())   
+  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
 end
 
 function Entity.update(self, dt)
   if self.state == 1 then
-    local x, y = self.transform.position:unpack()
-    if self.velocity.x ~= 0 then
+    local x, y = self.Transform.position:unpack()
+    if self.Velocity.x ~= 0 then
       local other, len = Physics.querySegment(x, y - 1000, x, y + 1000, function(other) if self.target == other then return 'cross' else return nil end end)
       if len ~= 0 then
-        for k, v in pairs(other[1]) do print(k, v) end
-        if other[1].center.y > self.transform.position.y + self.body.size.y * 0.5 then
+        if other[1].center.y > self.Transform.position.y + self.Body.size.y * 0.5 then
           addEntity(Entity.new({
-            position = Vec2(self.transform.position.x, self.transform.position.y + self.body.size.y),
+            position = Vec2(self.Transform.position.x, self.Transform.position.y + self.Body.size.y),
             speed = self.speed,
             target = self.target,
             forward = Vec2(0, 1)}))
         else
           addEntity(Entity.new({
-            position = Vec2(self.transform.position.x, self.transform.position.y + self.body.size.y),
+            position = Vec2(self.Transform.position.x, self.Transform.position.y + self.Body.size.y),
             speed = self.speed,
             target = self.target,
             forward = Vec2(0, -1)}))
@@ -52,15 +51,15 @@ function Entity.update(self, dt)
     else
       local other, len = Physics.querySegment(x - 1000, y, x + 1000, y, function(other) if self.target == other then return 'cross' else return nil end end)
       if len ~= 0 then
-        if other[1].center.x > self.transform.position.x + self.body.size.x * 0.5 then
+        if other[1].center.x > self.Transform.position.x + self.Body.size.x * 0.5 then
           addEntity(Entity.new({
-            position = Vec2(self.transform.position.x, self.transform.position.y + self.body.size.y),
+            position = Vec2(self.Transform.position.x, self.Transform.position.y + self.Body.size.y),
             speed = self.speed,
             target = self.target,
             forward = Vec2(1, 0)}))
         else
           addEntity(Entity.new({
-            position = Vec2(self.transform.position.x, self.transform.position.y + self.body.size.y),
+            position = Vec2(self.Transform.position.x, self.Transform.position.y + self.Body.size.y),
             speed = self.speed,
             target = self.target,
             forward = Vec2(-1, 0)}))
@@ -108,9 +107,9 @@ function Entity.new(args)
   end
 
   local entity = {
-    transform = transform,
-    body = body,
-    velocity = velocity,
+    Transform = transform,
+    Body = body,
+    Velocity = velocity,
     state = 1,
     target = args.target or g_player,
     iterations = args.iterations or 0

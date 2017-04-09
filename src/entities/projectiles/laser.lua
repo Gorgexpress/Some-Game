@@ -9,9 +9,9 @@ local Entity = {}
 local Entity_mt = {}
 
 local function updateBoundingBox(self)
-  local x, y, w, h = bbox(self.body.polygon)
-  self.transform.position.x, self.transform.position.y = x, y
-  self.body.size.x, self.body.size.y = w, h
+  local x, y, w, h = bbox(self.Body.polygon)
+  self.Transform.position.x, self.Transform.position.y = x, y
+  self.Body.size.x, self.Body.size.y = w, h
   Physics.updateRectSize(self, w, h)
 end
 
@@ -35,24 +35,24 @@ end
 function Entity.onCollision(self, other, type)
   if type == 'tile' and self.state < 3 then
     self.state = 2
-    self.timer = abs((self.body.polygon[3] - self.body.polygon[5]) / self.vel.x)
+    self.timer = abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x)
   elseif type == 'player' then
   end
 end
 
 
 function Entity.draw(self)
-  love.graphics.polygon('fill', unpack(self.body.polygon))  
+  love.graphics.polygon('fill', unpack(self.Body.polygon))  
 end
 
 local function filter(self, other)
-  if not other.body or other.body.type == 'player' then return 'cross'
+  if not other.Body or other.Body.type == 'player' then return 'cross'
   else return nil end
 end
 
 function Entity.update(self, dt)
-  local vertices = self.body.polygon
-  local dx, dy = self.vel.x * dt, self.vel.y * dt
+  local vertices = self.Body.polygon
+  local dx, dy = self.velocity.x * dt, self.velocity.y * dt
   if self.state == 0 then 
     self.timer = self.timer - dt
     if self.timer <= 0 then 
@@ -65,15 +65,15 @@ function Entity.update(self, dt)
   elseif self.state == 1 then
     move(vertices, dx, dy)
     --no need to update the bounding box in this case, just move it with velocity
-    self.transform.position.x, self.transform.position.y = self.transform.position.x + dx, self.transform.position.y + dy
+    self.Transform.position.x, self.Transform.position.y = self.Transform.position.x + dx, self.Transform.position.y + dy
     if self.iterations > 0 then
       self.timer = self.timer - dt
       if self.timer <= 0 then
         self.state = 2
-        self.timer = abs((vertices[3] - vertices[5]) / self.vel.x)
+        self.timer = abs((vertices[3] - vertices[5]) / self.velocity.x)
         local cx, cy = (vertices[1] + vertices[3]) / 2, (vertices[2] + vertices[4]) / 2
         local after = function()
-          local v = (self.target.center - Vec2(cx, cy)):normalize() * self.vel:len()
+          local v = (self.target.center - Vec2(cx, cy)):normalize() * self.velocity:len()
           EntityManager.add(Entity.new({position = Vec2(cx, cy), target = self.target, iterations = self.iterations - 1, velocity = v, 
             wait = self.wait, linger_time = self.linger_time, expand_time = self.expand_time}))
         end
@@ -134,9 +134,9 @@ function Entity.new(args)
   }
 
   local entity = {
-    transform = transform,
-    body = body,
-    vel = velocity,
+    Transform = transform,
+    Body = body,
+    velocity = velocity, --lowercase v, not a component!
     target = args.target or g_player,
     expand_time = args.expand_time or 0.35,
     iterations = args.iterations or 0,

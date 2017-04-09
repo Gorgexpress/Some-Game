@@ -10,7 +10,7 @@ function Utility.vecToDir(v)
 end
 
 function Utility.getCenter(self)
-  return self.transform.position + self.body.offset + self.body.size * 0.5
+  return self.Transform.position + self.Body.offset + self.Body.size * 0.5
 end
 
 function Utility.round(x)

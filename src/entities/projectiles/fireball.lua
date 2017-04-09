@@ -16,12 +16,12 @@ function Entity.draw(self)
   --TODO refractor all code related to drawing so that the get color is not needed
   local r, g, b, a = love.graphics.getColor()
   love.graphics.setColor(226, 88, 34)
-  love.graphics.circle('fill', self.transform.position.x, self.transform.position.y, self.radius)  
+  love.graphics.circle('fill', self.Transform.position.x, self.Transform.position.y, self.radius)  
   love.graphics.setColor(r, g, b, a) 
 end
 
 local function filter(self, other)
-  if other.properties or (other.body and other.body.type ~= 'player' and other.body.type ~= 'projectile') then
+  if other.properties or (other.Body and other.Body.type ~= 'player' and other.Body.type ~= 'projectile') then
     return 'cross'
   end
   return nil 
@@ -49,9 +49,9 @@ function Entity.new(args)
       },
   }
   local entity = {
-    transform = transform,
-    body = body,
-    velocity = args.velocity or Vec2(0, 0),
+    Transform = transform,
+    Body = body,
+    Velocity = args.velocity or Vec2(0, 0),
     radius = radius
   }
   return setmetatable(entity, Entity_mt)

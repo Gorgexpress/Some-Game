@@ -9,11 +9,11 @@ end
 
 
 function Entity.draw(self)
-  love.graphics.circle('fill', self.transform.position.x, self.transform.position.y, 6)  
+  love.graphics.circle('fill', self.Transform.position.x, self.Transform.position.y, 6)  
 end
 
 local function filter(self, other)
-  if other.body and other.body.polygon then return nil end
+  if other.Body and other.Body.polygon then return nil end
   return 'cross'
 end
 
@@ -29,11 +29,11 @@ function Entity.new(args)
   local entity = {}
   local x, y = args.position.x or 0, args.position.y or 0
 
-  entity.transform = args.transform or {
+  entity.Transform = args.transform or {
       position = Vec2(x, y),
       forward = Vec2(0, 0)
   }
-  entity.body = args.body or {
+  entity.Body = args.body or {
       size = Vec2(1, 1),
       offset = Vec2(-0.5, -0.5),
       filter = args.filter or filter,

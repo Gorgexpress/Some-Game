@@ -46,11 +46,11 @@ local MP_COST = 20
 
 
 local function playerFilter(self, other)
-  if other.body and other.body.type == 'projectile' then
+  if other.Body and other.Body.type == 'projectile' then
     return 'cross'
   end
   
-  if other.properties or (other.body and other.body.type == 'bump') then 
+  if other.properties or (other.Body and other.Body.type == 'bump') then 
     return 'slide'
   end
   return nil
@@ -92,8 +92,9 @@ function Player.new(args)
     current = animations.idle_u
   }
   local entity = {
-    transform = transform,
-    body = body,
+    Transform = transform,
+    Body = body,
+    Velocity = Vec2(0, 0),
     animator = animator,
     timer = Timer.new(),
     active = true,
@@ -101,7 +102,6 @@ function Player.new(args)
     health = 50,
     max_health = 50,
     center = transform.position + body.offset + body.size * 0.5,
-    velocity = Vec2(0, 0),
     velocity_dir = Vec2(0, 0),
     sprite = image,
     speed = 0,
@@ -121,7 +121,7 @@ end
 
 function Player.draw(self)
   if self.render then
-    self.animator.current:draw(self.sprite, self.transform.position:unpack())
+    self.animator.current:draw(self.sprite, self.Transform.position:unpack())
   end
 end
 
@@ -130,21 +130,21 @@ function Player.onCollision(self, other, type)
     if type == 'bumper' then
       self.time_running = 0
       SoundManager.playSound('bump')
-      --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
+      --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'bumped' and state ~= 'knockbacked' and not self.is_invincible then
       --TODO? use tweening instead with some kind of interpolation that makes it seem 
       --like there is friction(entity slows down before stopping, instead of stopping suddenly)
       SoundManager.playSound('hurt')
-      self.health = max(self.health - other.body.damage or 0, 0) 
-      self.velocity = other.transform.forward * 250
+      self.health = max(self.health - other.Body.damage or 0, 0) 
+      self.Velocity = other.Transform.forward * 250
       self.state = 'stunned'
       self.stunned_timer = STUN_TIME
       self.invincibility_timer = INVINCIBILITY_TIME
       self.is_invincible = true
-      self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
+      self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'projectile' and not self.is_invincible then
-      self.health = max(self.health - other.body.damage or 0, 0) 
-      self.velocity = Vec2(0, 0)
+      self.health = max(self.health - other.Body.damage or 0, 0) 
+      self.Velocity = Vec2(0, 0)
       self.state = 'stunned'
       self.stunned_timer = STUN_TIME
       self.is_invincible = true
@@ -157,15 +157,15 @@ function Player.onCollision(self, other, type)
 end
 
 function Player.update(self, dt)
-  self.center.x = self.transform.position.x + self.body.offset.x + self.body.size.x * 0.5
-  self.center.y = self.transform.position.y + self.body.offset.y + self.body.size.y * 0.5
+  self.center.x = self.Transform.position.x + self.Body.offset.x + self.Body.size.x * 0.5
+  self.center.y = self.Transform.position.y + self.Body.offset.y + self.Body.size.y * 0.5
   self.mp = min(self.mp + MP_REGEN_RATE * dt, self.max_mp)
   self.timer:update(dt)
-  self.old_x, self.old_y = self.transform.position.x + self.body.offset.x, self.transform.position.y + self.body.offset.y
+  self.old_x, self.old_y = self.Transform.position.x + self.Body.offset.x, self.Transform.position.y + self.Body.offset.y
   if self.state == 'running' and self.time_running < self.seconds_to_max_speed then
     self.time_running = math.min(self.time_running + dt, self.seconds_to_max_speed)
     self.speed = self.max_speed * (self.time_running / self.seconds_to_max_speed)
-    self.velocity = self.velocity_dir * self.speed
+    self.Velocity = self.velocity_dir * self.speed
   end
   if self.state == 'idle' or self.state == 'running' then
 
@@ -190,26 +190,26 @@ end
 function Player.move(self, dir_x, dir_y)
   if self.state == 'idle' or self.state == 'running' then
     if dir_x == 0 and dir_y == 0 then 
-      self.animator.current = self.animator.animations['idle_' .. vecToDir(self.transform.forward)]
+      self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
       self.state = 'idle'
-      self.velocity = Vec2(0, 0)
+      self.Velocity = Vec2(0, 0)
       self.time_running = 0
     else 
       if dir_x == 0 or dir_y == 0 then
-        --self.velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
+        --self.Velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
         self.velocity_dir = Vec2(dir_x, dir_y)
-        self.transform.forward.x, self.transform.forward.y = dir_x, dir_y
+        self.Transform.forward.x, self.Transform.forward.y = dir_x, dir_y
         if self.time_running == self.seconds_to_max_speed then
-          self.velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
+          self.Velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
         end
       else
-        --self.velocity = Vec2(self.speed * SIN45 * dir_x, self.speed * SIN45 * dir_y)
+        --self.Velocity = Vec2(self.speed * SIN45 * dir_x, self.speed * SIN45 * dir_y)
         self.velocity_dir = Vec2(SIN45 * dir_x, SIN45 * dir_y)
         if self.time_running == self.seconds_to_max_speed then
-          self.velocity = Vec2(SIN45 * self.speed * dir_x, SIN45 * self.speed * dir_y)
+          self.Velocity = Vec2(SIN45 * self.speed * dir_x, SIN45 * self.speed * dir_y)
         end
       end
-      self.animator.current = self.animator.animations['running_' .. vecToDir(self.transform.forward)]
+      self.animator.current = self.animator.animations['running_' .. vecToDir(self.Transform.forward)]
       if self.state == 'idle' then 
         self.animator.current:gotoFrame(1)
         self.state = 'running'
@@ -218,13 +218,13 @@ function Player.move(self, dir_x, dir_y)
     return true
   else --in a state where we cant move, buffer input.
     --if dir_x == 0 and dir_y == 0 then 
-      --self.velocity.frictionless.direction = Vec2(dir_x, dir_y)
+      --self.Velocity.frictionless.direction = Vec2(dir_x, dir_y)
    -- else 
       --if dir_x == 0 or dir_y == 0 then
-        --self.velocity.frictionless.direction = Vec2(dir_x, dir_y)
+        --self.Velocity.frictionless.direction = Vec2(dir_x, dir_y)
         --self.buffer.direction = Vec2(dir_x, dir_y)
       --else
-        --self.velocity.frictionless.direction = Vec2(SIN45 * dir_x, SIN45 * dir_y)
+        --self.Velocity.frictionless.direction = Vec2(SIN45 * dir_x, SIN45 * dir_y)
       --end
     --end
     return false
@@ -234,7 +234,7 @@ end
 function Player.action1(self)
   if self.rate_limited then return end
   if self.mp >= MP_COST then
-    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500})
+    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.Transform.forward * 500})
     self.mp = self.mp - MP_COST
   end
   self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
@@ -245,7 +245,7 @@ end
 function Player.action2(self)
   if self.charged then
     if self.mp >= MP_COST * 3 then
-      Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.transform.forward * 500, damage = 4, radius = 12})
+      Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.Transform.forward * 500, damage = 4, radius = 12})
       self.mp = self.mp - MP_COST * 3
     end
     self.charged = false

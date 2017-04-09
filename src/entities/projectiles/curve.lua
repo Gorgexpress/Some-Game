@@ -9,7 +9,7 @@ local Entity = {}
 local Entity_mt = {}
 
 local function bbox(self)
-  local vertices = self.body.polygon
+  local vertices = self.Body.polygon
   local ulx,uly = vertices[1], vertices[2]
 	local lrx,lry = ulx,uly
 	for i=3,#vertices, 2 do
@@ -21,9 +21,9 @@ local function bbox(self)
 		if lry < y then lry = y end
 	end
 
-  self.transform.position.x, self.transform.position.y = ulx, uly
+  self.Transform.position.x, self.Transform.position.y = ulx, uly
   local w, h = lrx - ulx, lry - uly
-  self.body.size.x, self.body.size.y = w, h
+  self.Body.size.x, self.Body.size.y = w, h
   Physics.updateRectSize(self, w, h)
 end
 
@@ -36,23 +36,23 @@ function Entity.draw(self)
   --love.graphics.line(self.curve:render())
   self.mesh:setVertices(bezierToMesh(self.curve, 6))
   love.graphics.draw(self.mesh)
-  love.graphics.circle('fill', self.transform.position.x, self.transform.position.y, 3)
-  love.graphics.circle('fill', self.endp.transform.position.x, self.endp.transform.position.y, 3)
+  love.graphics.circle('fill', self.Transform.position.x, self.Transform.position.y, 3)
+  love.graphics.circle('fill', self.endp.Transform.position.x, self.endp.Transform.position.y, 3)
 end
 
 local function filter(self, other)
-  if not other.body or other.body.type == 'player' then return 'cross'
+  if not other.Body or other.Body.type == 'player' then return 'cross'
   else return nil end
 end
 
 function Entity.update(self, dt)
-  local position = self.transform.position
+  local position = self.Transform.position
   self.curve:setControlPoint(1, position:unpack())
   if self.state == 0 then
     local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
     local dirx, diry = Vec2(dx, dy):normalize():unpack()
-    self.transform.forward.x , self.transform.forward.y = dirx, diry
-    self.velocity.x , self.velocity.y = dirx * self.speed , diry * self.speed
+    self.Transform.forward.x , self.Transform.forward.y = dirx, diry
+    self.Velocity.x , self.Velocity.y = dirx * self.speed , diry * self.speed
     if dx * dx + dy * dy <= self.dist2 then
       self.state = 1
       self.Timer:script(function(wait)
@@ -79,29 +79,29 @@ function Entity.update(self, dt)
   elseif self.state == 1 then
     local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
     local dirx, diry = Vec2(dx, dy):normalize():unpack()
-    self.transform.forward.x , self.transform.forward.y = dirx, diry
-    self.velocity.x , self.velocity.y = dirx * self.speed , diry * self.speed
+    self.Transform.forward.x , self.Transform.forward.y = dirx, diry
+    self.Velocity.x , self.Velocity.y = dirx * self.speed , diry * self.speed
   elseif self.state == 2 then
     --[[
     local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
     local dirx, diry = Vec2(dx, dy):normalize():unpack()
-    local forward = self.transform.forward
+    local forward = self.Transform.forward
     local current_angle = forward:to_polar()
     local target_angle = Vec2(dirx, diry)
     local diff = forward:angle_between(target_angle)
     local rate = math.min((self.rotation_speed * dt) / diff, 1)
-    self.transform.forward = self.transform.forward:lerp(target_angle, rate)]]
+    self.Transform.forward = self.Transform.forward:lerp(target_angle, rate)]]
     local desired = atan2(self.target.center.y - position.y, self.target.center.x - position.x)
-    local current = atan2(self.transform.forward.y, self.transform.forward.x)
+    local current = atan2(self.Transform.forward.y, self.Transform.forward.x)
     local diff = desired - current
     if math.abs(diff) > math.pi then diff = -(diff - math.pi) end
     local rate = math.max(-self.rotation_speed * dt, math.min(self.rotation_speed * dt, diff))
-    self.transform.forward = self.transform.forward:rotate(rate)
+    self.Transform.forward = self.Transform.forward:rotate(rate)
     self.last_rate = rate
-    self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
+    self.Velocity.x , self.Velocity.y = self.Transform.forward.x * self.speed, self.Transform.forward.y * self.speed
   elseif self.state == 4 then
-    if self.last_rate then self.transform.forward = self.transform.forward:rotate(self.last_rate / 2) end
-    self.velocity.x , self.velocity.y = self.transform.forward.x * self.speed, self.transform.forward.y * self.speed
+    if self.last_rate then self.Transform.forward = self.Transform.forward:rotate(self.last_rate / 2) end
+    self.Velocity.x , self.Velocity.y = self.Transform.forward.x * self.speed, self.Transform.forward.y * self.speed
   elseif self.state == 5 then
   elseif self.state == 6 then
     self.destroyed = true
@@ -109,7 +109,7 @@ function Entity.update(self, dt)
       v.destroyed = true
     end
   end
-  local x, y = self.transform.position:unpack()
+  local x, y = self.Transform.position:unpack()
   self.Timer:update(dt)
   --self.Timer:after(0.25, function() self.curve:setControlPoint(2, x, y) end)
   --self.Timer:after(0.5, function() self.curve:setControlPoint(3, x, y) end)
@@ -122,14 +122,14 @@ function Entity.new(args)
   local half_width = width / 2
   entity.speed = 250
   entity.velocity_dir = Vec2(0, 0)
-  entity.velocity = Vec2(0, 0)
+  entity.Velocity = Vec2(0, 0)
   local x, y = args.position.x or 0, args.position.y or 0
-  entity.transform = args.transform or {
+  entity.Transform = args.transform or {
       position = Vec2(x, y),
       forward = Vec2(0, 0)
   }
 
-  entity.body = args.body or {
+  entity.Body = args.body or {
       size = Vec2(1, 1),
       offset = Vec2(-0.5, -0.5),
       filter = args.filter or filter,
@@ -161,17 +161,17 @@ function Entity.new(args)
 
 
   local mid = {
-    transform = {
-      position = entity.transform.position:clone(),
+    Transform = {
+      position = entity.Transform.position:clone(),
       forward = Vec2(0, 0)
     },
     update = function(self) 
-      entity.curve:setControlPoint(2, self.transform.position:unpack())
-      if self.velocity then
+      entity.curve:setControlPoint(2, self.Transform.position:unpack())
+      if self.Velocity then
         local x1, y1 = entity.curve:evaluate(0.5)
         local x2, y2 = entity.curve:evaluate(0.4)
         local dir = Vec2(x2 - x1, y2 - y1):normalize()
-        self.velocity = dir * self.speed
+        self.Velocity = dir * self.speed
 
       end
     end,
@@ -179,18 +179,18 @@ function Entity.new(args)
     speed = entity.speed
   }
   local endp = {
-    transform = {
-      position = entity.transform.position:clone(),
+    Transform = {
+      position = entity.Transform.position:clone(),
       forward = Vec2(0, 0)
     },
-    body = entity.body,
+    Body = entity.Body,
     update = function(self) 
-      entity.curve:setControlPoint(3, self.transform.position:unpack())
-      if self.velocity then
+      entity.curve:setControlPoint(3, self.Transform.position:unpack())
+      if self.Velocity then
         local x1, y1 = entity.curve:evaluate(1)
         local x2, y2 = entity.curve:evaluate(0.9)
         local dir = Vec2(x2 - x1, y2 - y1):normalize()
-        self.velocity = dir * self.speed
+        self.Velocity = dir * self.speed
       end
     end,
     draw = function(self)  end,
@@ -200,8 +200,8 @@ function Entity.new(args)
   entity.children = {mid, endp}
   EntityManager.add(mid)
   EntityManager.add(endp)
-  entity.Timer:after(0.25, function() mid.velocity = Vec2(0, 0) end)
-  entity.Timer:after(0.5, function() endp.velocity = Vec2(0, 0) end)
+  entity.Timer:after(0.25, function() mid.Velocity = Vec2(0, 0) end)
+  entity.Timer:after(0.5, function() endp.Velocity = Vec2(0, 0) end)
   entity.mid = mid
   entity.endp = endp
   return setmetatable(entity, Entity_mt)

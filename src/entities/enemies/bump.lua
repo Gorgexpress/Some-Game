@@ -6,35 +6,35 @@ local Entity_mt = {}
 
 
 local function filter(self, other)
-  if not other.body or other.body.type == 'player' then return 'slide'
-  elseif other.body.type == 'projectile' then return nil
+  if not other.Body or other.Body.type == 'player' then return 'slide'
+  elseif other.Body.type == 'projectile' then return nil
   else return 'cross'
   end
 end
 
 function Entity.think(self)
   if self.state == 'hurt' or self.state =='melee' or self.state == 'stun' then return end
-  local dx, dy = self.transform.position.x - g_player.center.x, self.transform.position.y - g_player.center.y
+  local dx, dy = self.Transform.position.x - g_player.center.x, self.Transform.position.y - g_player.center.y
   if dx * dx + dy * dy < 700* 700 then
     if math.abs(dx) > math.abs(dy) then
       if dx <= 0 then
-        self.velocity = Vec2(self.speed, 0)
-        self.transform.forward = Vec2(1, 0)
+        self.Velocity = Vec2(self.speed, 0)
+        self.Transform.forward = Vec2(1, 0)
       else
-        self.velocity= Vec2(-self.speed, 0)
-        self.transform.forward = Vec2(-1, 0)
+        self.Velocity= Vec2(-self.speed, 0)
+        self.Transform.forward = Vec2(-1, 0)
       end
     else
       if dy <= 0 then
-        self.velocity = Vec2(0, self.speed)
-        self.transform.forward = Vec2(0, 1)
+        self.Velocity = Vec2(0, self.speed)
+        self.Transform.forward = Vec2(0, 1)
       else
-        self.velocity = Vec2(0, -self.speed)
-        self.transform.forward = Vec2(0, -1)
+        self.Velocity = Vec2(0, -self.speed)
+        self.Transform.forward = Vec2(0, -1)
       end
     end
   else
-    self.velocity.x, self.velocity.y = 0, 0
+    self.Velocity.x, self.Velocity.y = 0, 0
   end
 end
 
@@ -42,25 +42,25 @@ end
 function Entity.onCollision(self, other, type)
   if type == 'tile' or type == 'projectile' then return end
   if type == 'p_projectile' then
-    self.health = math.max(self.health - other.body.damage or 0, 0)
+    self.health = math.max(self.health - other.Body.damage or 0, 0)
   elseif type == 'bumper' or type == 'bumped' then
-    self.velocity = Vec2(0, 0)
+    self.Velocity = Vec2(0, 0)
     if type == 'bumper' then
       self.think_timer = 0.1
       self.state = 'bump'
-      self.velocity = -self.transform.forward:normalize() * 250
+      self.Velocity = -self.Transform.forward:normalize() * 250
     elseif type =='bumped' then
       self.think_timer = 0.2
       self.state = 'bump'
-      self.health = math.max(self.health - other.body.damage or 0, 0)
-      self.velocity = other.transform.forward:normalize() * 500
+      self.health = math.max(self.health - other.Body.damage or 0, 0)
+      self.Velocity = other.Transform.forward:normalize() * 500
     end
   end
   if self.health <= 0 then self.destroyed = true end
 end
 
 function Entity.draw(self)
-  love.graphics.rectangle('fill', self.transform.position.x, self.transform.position.y, self.body.size:unpack())   
+  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
 end
 
 
@@ -89,9 +89,9 @@ function Entity.new(args)
   }
 
   local entity = {
-    transform = transform,
-    body = body,
-    velocity = args.velocity or Vec2(0, 0),
+    Transform = transform,
+    Body = body,
+    Velocity = args.velocity or Vec2(0, 0),
     state = 'idle',
     think_timer = 0.25,
     health = 50,

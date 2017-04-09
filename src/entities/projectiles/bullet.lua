@@ -13,7 +13,7 @@ function Entity.onCollision(self, other, type)
 end
 
 function Entity.draw(self)
-  love.graphics.rectangle('fill', self.transform.position.x, self.transform.position.y, self.body.size:unpack())   
+  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
 end
 
 local function filter(self, other)
@@ -49,9 +49,9 @@ function Entity.new(args)
   end
 
   local entity = {
-    transform = transform,
-    body = body,
-    velocity = args.velocity or Vec2(0, 0),
+    Transform = transform,
+    Body = body,
+    Velocity = args.velocity or Vec2(0, 0),
     target = args.target or g_player
   }
 
