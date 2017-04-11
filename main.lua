@@ -9,6 +9,10 @@ local UI = require 'src/managers/ui'
 local debug = false
 local pause = false
 
+
+local INTERNAL_HEIGHT = 600
+local scale
+
 local player 
 
 function love.load()
@@ -25,7 +29,8 @@ function love.load()
   --Entity.add('enemies/bosses/boss1', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y - 250)})
   camera = gamera.new(0, 0, world.width, world.height)
   camera:setPosition(g_player.Transform.position.x, g_player.Transform.position.y)
-  --love.graphics.setDefaultFilter("nearest","nearest")
+  love.graphics.setDefaultFilter("nearest","nearest")
+  scale = love.graphics.getHeight() / INTERNAL_HEIGHT
 end
     
 function love.update(dt)

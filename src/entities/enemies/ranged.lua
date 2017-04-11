@@ -54,13 +54,16 @@ function Entity.onCollision(self, other, type)
   if type == 'p_projectile' then
     self.health = math.max(self.health - other.Body.damage or 0, 0)
   elseif type == 'bumper' or type == 'bumped' then
-    self.Velocity = Vec2(0, 0)
     if type == 'bumper' then
+      self.Velocity = Vec2(0, 0)
       self.think_timer = 0.1
       self.attacking = false
       self.state = 'bump'
       self.Velocity = -self.Transform.forward:normalize() * 250
     elseif type == 'bumped' then 
+       if self.invincibility_to_bump_timer > 0 then return end
+      self.Velocity = Vec2(0, 0)
+      self.invincibility_to_bump_timer = 0.1
       self.think_timer = 0.2
       self.attacking = false
       self.state = 'bump'
@@ -83,6 +86,9 @@ local function filter(self, other)
 end
 
 function Entity.update(self, dt)
+  if self.invincibility_to_bump_timer > 0 then
+    self.invincibility_to_bump_timer = self.invincibility_to_bump_timer - dt 
+  end
   self.think_timer = self.think_timer - dt
   if self.think_timer <= 0 then
     self:think()
@@ -120,7 +126,8 @@ function Entity.new(args)
     speed = args.speed or 50,
     target = args.target or g_player,
     aggro_range2 = aggro_range * aggro_range,
-    seal_range2 = seal_range * seal_range
+    seal_range2 = seal_range * seal_range,
+    invincibility_to_bump_timer = 0
   }
 
   return setmetatable(entity, Entity_mt)
