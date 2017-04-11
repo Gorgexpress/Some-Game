@@ -23,7 +23,6 @@ function EntityManager.add(entity, args)
     entity = class.new(args)
   end
   m_size = m_size + 1
-  print(entity)
   if m_size >  m_capacity then m_capacity = m_size end 
   m_entities[m_size] = entity
   PhysicsSystem.onAdd(entity)  

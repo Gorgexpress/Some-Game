@@ -1,8 +1,24 @@
 local Vec2 = require 'lib/vec2'
+local Asset = require 'src/managers/asset'
+local Timer = require 'lib/timer'
 
+local image = Asset.getImage('bullet')
 local Entity = {}
 local Entity_mt = {}
 
+
+
+local shader = love.graphics.newShader[[
+    vec4 effect( vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords ){
+      vec4 pixel = Texel(texture, texture_coords );//This is the current pixel color
+      return pixel * 0.875;
+    }
+  ]]
+local _use_shader = false
+Timer.every(0.2, function() _use_shader = not _use_shader end)
+
+local image = Asset.getImage('bullet')
+local quad = love.graphics.newQuad(0, 0, 16, 16, image:getDimensions())
 
 function Entity.onCollision(self, other, type)
   if type == 'player' or type == 'tile' then
@@ -11,7 +27,11 @@ function Entity.onCollision(self, other, type)
 end
 
 function Entity.draw(self)
-  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
+  if _use_shader then 
+    love.graphics.setShader(shader)
+  end
+  love.graphics.draw(image, quad, self.Transform.position:unpack())
+  love.graphics.setShader()
 end
 
 local function filter(self, other)
@@ -22,7 +42,7 @@ local function filter(self, other)
 end
 
 function Entity.update(self, dt)
-  
+
 end
 
 function Entity.new(args) 
@@ -32,8 +52,8 @@ function Entity.new(args)
     forward = Vec2(0, -1),
   }
   local body = args.body or {
-    size = Vec2(6, 6),
-    offset = Vec2(0, 0),
+    size = Vec2(4, 4),
+    offset = Vec2(6, 6),
     filter = args.filter or filter,
     type = args.type or 'projectile',
     damage = 1,
@@ -43,7 +63,7 @@ function Entity.new(args)
   }
   if not body.filter then body.filter = filter end
   if args.position then
-    transform.position = transform.position - body.size * 0.5
+    transform.position = transform.position - body.offset - body.size * 0.5
   end
 
   local entity = {

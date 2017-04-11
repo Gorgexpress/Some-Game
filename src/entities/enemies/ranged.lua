@@ -37,9 +37,9 @@ function Entity.think(self)
       self.attacking = false
     elseif dist2 > self.seal_range2 then
       local position = self.Transform.position + self.Body.offset + self.Body.size * 0.5
-      local velocity = (self.target.center - position):normalize() * -750
-      --EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
-      EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1})
+      local velocity = (self.target.center - position):normalize() * 200
+      EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
+      --EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1})
       --EntityManager.add('projectiles/curve', {position = position})
       --EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
     end

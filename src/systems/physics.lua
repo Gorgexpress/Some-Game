@@ -3,24 +3,18 @@ local vec2 = require 'lib/vec2'
 local PolygonCollision = require 'lib/polygon-collision'
 local acos, abs, min = math.acos, math.abs, math.min
 
-
 local m_physics
 
 local PhysicsSystem = {}
 
 
 local function bumpCollision2(self, other, normal)
-  local angle = acos(self.Transform.forward:dot(other.Transform.forward))
-  if normal.x ~= 0 then
-    angle = angle * normal.x
-  else
-    angle = angle * normal.y
-  end
-  if abs(angle) > 3 then 
-    print('head on')
-  elseif abs(angle) > 1 then
-  end
-  print(normal.x, normal.y, angle)
+  local position = other.Transform.position + other.Body.offset + other.Body.size * 0.5
+  local desired = math.atan2(position.y - self.center.y, position.x - self.center.x)
+  local current = math.atan2(self.Transform.forward.y, self.Transform.forward.x)
+  local diff = desired - current
+  if math.abs(diff) > math.pi then diff = -(diff - math.pi) end
+  print(diff)
 end
 
 
@@ -59,7 +53,7 @@ local function bumpCollision(self, other, normal, touch)
   local p1, p2 = self.Transform.position + self.Body.offset, other.Transform.position + other.Body.offset
   local f1, f2 = self.Transform.forward, other.Transform.forward
   local s1, s2 = self.Body.size, other.Body.size
-  local angle = math.atan2(touch.y - self.old_y, touch.x - self.old_x)
+  bumpCollision2(self, other, normal)
   local depth_hit = 16
   local safe = 2
   if normal.y == -1 or normal.y == 1 then
