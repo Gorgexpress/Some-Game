@@ -1,7 +1,3 @@
-local Bump = require 'lib/bump'
-local vec2 = require 'lib/vec2'
-
-
 local VelocitySystem = {}
 
 

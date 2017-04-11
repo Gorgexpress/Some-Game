@@ -1,8 +1,8 @@
 local Vec2 = require 'lib/vec2'
 local VectorLight = require 'lib/vector-light'
 local Timer = require 'lib/timer'
-local Physics = require "src/systems/physics-system"
-local EntityManager = require 'src/managers/entity-manager'
+local Physics = require "src/systems/physics"
+local EntityManager = require 'src/managers/entity'
 local bezierToMesh = require('lib/utility').bezierToMesh
 local abs, atan2, max, min = math.abs, math.atan2, math.max, math.min
 local Entity = {}

@@ -1,6 +1,6 @@
 local Vec2 = require 'lib/vec2'
-local Physics = require "src/systems/physics-system"
-local EntityManager = require 'src/managers/entity-manager'
+local Physics = require "src/systems/physics"
+local EntityManager = require 'src/managers/entity'
 local Timer = require 'lib/timer'
 local Utility = require 'lib/utility'
 local bbox = Utility.bbox
@@ -158,7 +158,7 @@ function Entity.new(args)
     move_time = args.move_time or 0.1,
     parent = args.parent or nil,
     active = true,
-    state = 'extend',
+    state = 'init',
     linger_time = args.linger_time or 0,
     Timer = Timer.new(),
   }

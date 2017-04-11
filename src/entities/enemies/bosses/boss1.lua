@@ -1,5 +1,5 @@
 local Vec2 = require 'lib/vec2'
-local addEntity = require('src/managers/entity-manager').add
+local addEntity = require('src/managers/entity').add
 local Bullet = require 'src/entities/projectiles/bullet'
 local rain = require 'src/entities/patterns/rain'
 local Entity = {}

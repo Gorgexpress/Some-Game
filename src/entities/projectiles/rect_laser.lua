@@ -1,6 +1,6 @@
 local Vec2 = require 'lib/vec2'
-local Physics = require 'src/systems/physics-system'
-local addEntity = require('src/managers/entity-manager').add
+local Physics = require 'src/systems/physics'
+local addEntity = require('src/managers/entity').add
 local Entity = {}
 local Entity_mt = {}
 

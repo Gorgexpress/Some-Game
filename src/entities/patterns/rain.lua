@@ -1,6 +1,6 @@
 local Bullet = require 'src/entities/projectiles/bullet'
 local Vec2 = require 'lib/vec2'
-local addEntity = require('src/managers/entity-manager').add
+local addEntity = require('src/managers/entity').add
 local rotate = require('lib/vector-light').rotate
 
 local function bulletUpdate(self, dt)

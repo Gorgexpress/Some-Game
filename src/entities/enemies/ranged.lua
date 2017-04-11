@@ -1,6 +1,6 @@
 local Vec2 = require 'lib/vec2'
 local THINK_TIME = 0.25
-local EntityManager = require 'src/managers/entity-manager'
+local EntityManager = require 'src/managers/entity'
 local Utility = require 'lib/utility'
 local round = Utility.round
 local floor, abs = math.floor, math.abs

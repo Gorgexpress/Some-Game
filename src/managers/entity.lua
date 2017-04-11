@@ -1,5 +1,5 @@
-local PhysicsSystem = require 'src/systems/physics-system'
-local VelocitySystem = require 'src/systems/velocity-system'
+local PhysicsSystem = require 'src/systems/physics'
+local VelocitySystem = require 'src/systems/velocity'
 local Signal = require 'lib/signal'
 local FileSystem = love.filesystem
 local ENTITIES_PATH = 'src/entities/'

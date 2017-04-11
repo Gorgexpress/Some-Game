@@ -1,4 +1,4 @@
-local Assets = require 'src/managers/asset-manager'
+local Assets = require 'src/managers/asset'
 local SoundManager = {}
 
 function SoundManager.play(name)

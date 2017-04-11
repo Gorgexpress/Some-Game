@@ -5,10 +5,8 @@ local Entity_mt = {}
 
 
 function Entity.onCollision(self, other, type)
-  self.destroyed = true
-  if type then
-    if type == 'player' then
-    end
+  if type == 'player' or type == 'tile' then
+    self.destroyed = true
   end
 end
 
@@ -52,7 +50,6 @@ function Entity.new(args)
     Transform = transform,
     Body = body,
     Velocity = args.velocity or Vec2(0, 0),
-    target = args.target or g_player,
     update = args.update
   }
 

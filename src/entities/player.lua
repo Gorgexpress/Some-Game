@@ -23,14 +23,14 @@
 local Vec2 = require 'lib/vec2'
 local anim8 = require 'lib/anim8'
 local Timer = require 'lib/timer'
-local Asset = require 'src/managers/asset-manager'
+local Asset = require 'src/managers/asset'
 local image = Asset.getImage('player')
 local Utility = require 'lib/utility'
 local Signal = require 'lib/signal'
 local vecToDir = Utility.vecToDir
 local grid = anim8.newGrid(40, 40, image:getWidth(), image:getHeight())
-local Entity = require 'src/managers/entity-manager'
-local SoundManager = require 'src/managers/sound-manager'
+local Entity = require 'src/managers/entity'
+local SoundManager = require 'src/managers/sound'
 local max, min = math.max, math.min
 
 local Player = {}
