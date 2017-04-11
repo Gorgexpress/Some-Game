@@ -39,9 +39,9 @@ local Player_mt = {}
 local SIN45 = 0.70710678118
 local STUN_TIME = 0.75
 local INVINCIBILITY_TIME = 1.5
-local CHARGE_TIME = 1
+local CHARGE_TIME = 0.75
 local RATE_OF_FIRE = 0.2
-local MP_REGEN_RATE = 35
+local MP_REGEN_RATE = 50
 local MP_COST = 20
 
 
@@ -102,7 +102,7 @@ function Player.new(args)
     health = 50,
     max_health = 50,
     center = transform.position + body.offset + body.size * 0.5,
-    velocity_dir = Vec2(0, 0),
+    velocity_dir = transform.forward:clone(),
     sprite = image,
     speed = 0,
     max_speed = 250,
@@ -234,7 +234,7 @@ end
 function Player.action1(self)
   if self.rate_limited then return end
   if self.mp >= MP_COST then
-    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.Transform.forward * 500})
+    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.velocity_dir * 500})
     self.mp = self.mp - MP_COST
   end
   self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
@@ -245,8 +245,11 @@ end
 function Player.action2(self)
   if self.charged then
     if self.mp >= MP_COST * 3 then
-      Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.Transform.forward * 500, damage = 4, radius = 12})
+      local velocity = self.velocity_dir:is_zero() and self.Transform.forward or self.Velocity:normalize()
+      Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.velocity_dir * 500, damage = 4, radius = 12})
       self.mp = self.mp - MP_COST * 3
+      self.rate_limited = true
+      Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
     end
     self.charged = false
   end
