@@ -23,7 +23,7 @@ function EntityManager.add(entity, args)
     entity = class.new(args)
   end
   m_size = m_size + 1
-  print(m_size)
+  print(entity)
   if m_size >  m_capacity then m_capacity = m_size end 
   m_entities[m_size] = entity
   PhysicsSystem.onAdd(entity)  
@@ -57,6 +57,10 @@ setting table values to nil. Not as efficient, but easier and cleaner]]
 function EntityManager.update(dt)
   local entities_to_destroy = {}
   local num_to_destroy = 0
+  --call update function
+  for i=1, m_size do
+    if m_entities[i].update then m_entities[i]:update(dt) end 
+  end
   --if entity is flagged for destruction, add it to array of entities to destroy
   --otherwise update state
   for i=1, m_size do
@@ -81,10 +85,6 @@ function EntityManager.update(dt)
   --update physics
   VelocitySystem.update(m_entities, m_size, dt)
   PhysicsSystem.update(m_entities, m_size, dt)
-  --update ai
-  for i=1, m_size do
-    if m_entities[i].update then m_entities[i]:update(dt) end 
-  end
 end
 
 function EntityManager.setWorld(world)

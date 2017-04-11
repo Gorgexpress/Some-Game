@@ -52,7 +52,7 @@ local function scriptUpdate(self)
   function(wait)
     --extend laser by only moving the front 2 vertices
     wait(self.extend_time)
-    --move entire laser
+    --move entire laser. 
     self.state = 'move'
     --no more logic if no iterations, just move the laser normally until it is destroyed by collision
     if self.iterations == 0 then return end 
@@ -158,7 +158,7 @@ function Entity.new(args)
     move_time = args.move_time or 0.1,
     parent = args.parent or nil,
     active = true,
-    state = 'init',
+    state = 'extend',
     linger_time = args.linger_time or 0,
     Timer = Timer.new(),
   }
