@@ -1,8 +1,8 @@
 local Vec2 = require 'lib/vec2'
 local Asset = require 'src/managers/asset'
 local Timer = require 'lib/timer'
+local draw, setShader = love.graphics.draw, love.graphics.setShader
 
-local image = Asset.getImage('bullet')
 local Entity = {}
 local Entity_mt = {}
 
@@ -17,8 +17,8 @@ local shader = love.graphics.newShader[[
 local _use_shader = false
 Timer.every(0.2, function() _use_shader = not _use_shader end)
 
-local image = Asset.getImage('bullet')
-local quad = love.graphics.newQuad(0, 0, 16, 16, image:getDimensions())
+local image = Asset.getImage('graphics/projectiles/bullet2')
+local quad = love.graphics.newQuad(32, 0, 16, 16, image:getDimensions())
 
 function Entity.onCollision(self, other, type)
   if type == 'player' or type == 'tile' then
@@ -28,10 +28,15 @@ end
 
 function Entity.draw(self)
   if _use_shader then 
-    love.graphics.setShader(shader)
+    setShader(shader)
   end
-  love.graphics.draw(image, quad, self.Transform.position:unpack())
-  love.graphics.setShader()
+  if self.is_rotated then
+    local x, y =  self.Transform.position:unpack()
+    draw(self.image, self.quad, x, y, self.Transform.forward:to_polar())
+  else
+    draw(self.image, self.quad, self.Transform.position:unpack())
+  end
+  setShader()
 end
 
 local function filter(self, other)
@@ -41,11 +46,8 @@ local function filter(self, other)
   return nil 
 end
 
-function Entity.update(self, dt)
 
-end
-
-function Entity.new(args) 
+function Entity.new(args, properties) 
 
   local transform = args.transform or {
     position = args.position or Vec2(0, 0),
@@ -57,21 +59,22 @@ function Entity.new(args)
     filter = args.filter or filter,
     type = args.type or 'projectile',
     damage = 1,
-    properties = {
-      damage = 1
-    }
   }
-  if not body.filter then body.filter = filter end
-  if args.position then
-    transform.position = transform.position - body.offset - body.size * 0.5
-  end
 
   local entity = {
     Transform = transform,
     Body = body,
     Velocity = args.velocity or Vec2(0, 0),
-    update = args.update
+    update = args.update or nil,
+    image = image,
+    quad = quad,
   }
+
+  if properties then
+    for k, v in pairs(properties) do
+      entity[k] = v
+    end
+  end
 
   return setmetatable(entity, Entity_mt)
 end

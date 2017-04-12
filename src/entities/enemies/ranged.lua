@@ -1,6 +1,6 @@
 local Vec2 = require 'lib/vec2'
 local THINK_TIME = 0.25
-local EntityManager = require 'src/managers/entity'
+local fire = require('src/projectile-spawner').fireAtPlayerFromCenter
 local Utility = require 'lib/utility'
 local round = Utility.round
 local floor, abs = math.floor, math.abs
@@ -30,21 +30,19 @@ function Entity.think(self)
     if dist2 < self.aggro_range2 then
       self.attacking = true
       self.think_timer = self.attack_timer
-      facePlayer(self, dx, dy)
+      --facePlayer(self, dx, dy)
     end
   else
     if dist2 > DEAGGRO_RANGE2 then
       self.attacking = false
     elseif dist2 > self.seal_range2 then
-      local position = self.Transform.position + self.Body.offset + self.Body.size * 0.5
-      local velocity = (self.target.center - position):normalize() * 200
-      EntityManager.add('projectiles/bullet', {position = position, velocity = velocity})
+      --fire(self, 200, 'bullet')
       --EntityManager.add('projectiles/laser', {position = position, velocity = velocity, iterations = 1})
       --EntityManager.add('projectiles/curve', {position = position})
       --EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
     end
     self.think_timer = self.attack_timer
-    facePlayer(self, dx, dy)
+    --facePlayer(self, dx, dy)
   end
 end
 

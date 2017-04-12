@@ -10,7 +10,7 @@ local debug = false
 local pause = false
 
 
-local INTERNAL_HEIGHT = 600
+local INTERNAL_HEIGHT = 768
 local scale
 
 local player 
@@ -31,6 +31,8 @@ function love.load()
   camera:setPosition(g_player.Transform.position.x, g_player.Transform.position.y)
   love.graphics.setDefaultFilter("nearest","nearest")
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
+  --camera:setScale(1.4)
+
 end
     
 function love.update(dt)
@@ -39,16 +41,18 @@ function love.update(dt)
   Timer.update(dt)
 end
 
+local function camera_draw(l, t, w, h)
+  map:setDrawRange(l, t, w, h)
+  map:draw()
+  for _, entity in ipairs(Entity.entities) do
+    entity:draw()
+  end
+  if debug then Entity.drawCollision() end
+end
+
 function love.draw()
   camera:setPosition(player.Transform.position.x, player.Transform.position.y) 
-  camera:draw(function(l, t, w, h)
-    map:setDrawRange(l, t, w, h)
-    map:draw()
-    for _, entity in ipairs(Entity.entities) do
-      entity:draw()
-    end
-    if debug then Entity.drawCollision() end
-  end)
+  camera:draw(camera_draw)
   UI.draw(player)
   love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end

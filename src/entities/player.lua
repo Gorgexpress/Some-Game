@@ -135,7 +135,7 @@ function Player.onCollision(self, other, type)
       --TODO? use tweening instead with some kind of interpolation that makes it seem 
       --like there is friction(entity slows down before stopping, instead of stopping suddenly)
       SoundManager.playSound('hurt')
-      self.health = max(self.health - other.Body.damage or 0, 0) 
+      self.health = max(self.health - (other.Body.damage or 0), 0) 
       self.Velocity = other.Transform.forward * 250
       self.state = 'stunned'
       self.stunned_timer = STUN_TIME
@@ -143,7 +143,7 @@ function Player.onCollision(self, other, type)
       self.is_invincible = true
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'projectile' and not self.is_invincible then
-      self.health = max(self.health - other.Body.damage or 0, 0) 
+      self.health = max(self.health - (other.Body.damage or 0), 0) 
       self.Velocity = Vec2(0, 0)
       self.state = 'stunned'
       self.stunned_timer = STUN_TIME

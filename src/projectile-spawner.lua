@@ -1,11 +1,17 @@
 local Vec2 = require 'lib/vec2'
 local Vec2l = require 'lib/vector-light'
 local add, sub, mul, normalize = Vec2l.add, Vec2l.sub, Vec2l.mul, Vec2l.normalize
+local sqrt = math.sqrt
 local EntityManager = require 'src/managers/entity'
+local addEntity = EntityManager.add
 
 local ProjectileSpawner = {}
 
 local _player = g_player
+
+function ProjectileSpawner.fire(position, velocity, type, properties)
+  addEntity('projectiles/'..type, {position = position:clone(), velocity = velocity:clone()}, properties)
+end
 
 function ProjectileSpawner.fireAtPosition(self, target, type)
   local position = self.transform.position + self.body.offset + self.body.size * 0.5
@@ -26,15 +32,24 @@ function ProjectileSpawner.fireAtPlayer(self, speed, arg3, arg4, arg5)
   end
 end
 
-function ProjectileSpawner.fireAtPlayerFromCenter(self, target, speed, arg4, arg5, arg6)
-  local x1, y1 = self.Transform.position:unpack()
+function ProjectileSpawner.fireFromCenter(self, forward, speed, type, properties)
+  local x, y = self.Transform.position:unpack()
   local ox, oy = self.Body.offset:unpack()
   local sx, sy = self.Body.size:unpack()
-  local x2, y2 = _player.center:unpack()
-  local x, y = x2 - (x1 + ox + sx * 0.5), y2 - (y1 + oy + sy * 0.5)
-  local len = math.sqrt(x * x + y * y)
-  local vx, vy = (x / len) * speed, (y / len) * speed 
+  x, y = x + ox + sx * 0.5, y + oy + sy * 0.5
+  addEntity('projectiles/'..type, {position = Vec2(x1, y1), velocity = forward * speed}, properties)
+end
 
+function ProjectileSpawner.fireAtPlayerFromCenter(self, speed, type, properties)
+  local x, y = self.Transform.position:unpack()
+  local ox, oy = self.Body.offset:unpack()
+  local sx, sy = self.Body.size:unpack()
+  local x1, y1 = x + ox + sx * 0.5, y + oy + sy * 0.5
+  local x2, y2 = _player.center:unpack()
+  local dx, dy = x2 - x1, y2 - y1
+  local len = sqrt(dx * dx + dy * dy)
+  local vx, vy = (dx / len) * speed, (dy / len) * speed 
+  addEntity('projectiles/'..type, {position = Vec2(x1, y1), velocity = Vec2(vx, vy)}, properties)
 end
 
 

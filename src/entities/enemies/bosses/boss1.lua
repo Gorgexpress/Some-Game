@@ -38,12 +38,11 @@ end
 local function fire1(self)
   local center = self.Transform.position + self.Body.size * 0.5
   local dir = (self.target.center - center):normalize()
-  addEntity(Bullet({position = center:clone(), body = big_bullet_body, velocity = dir * 300}))
   local n = math.random()
   if n > 0.3 then
-    rain(center.x, center.y, dir.x, dir.y, 300, 1, {0.2, 0.8, 1, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, 0, 1, 250, 1, {0.0, 0.2, 0.8, 1, 1.2, 1.4, 1.6})
   else
-    rain(center.x, center.y, dir.x, dir.y, 300, 1, {0.2, 0.4, 0.6, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, 0, 1, 250, 1, {0.0, 0.2, 0.4, 0.6, 1.2, 1.4, 1.6})
   end
 end
 
@@ -57,7 +56,9 @@ function Entity.onCollision(self, other, type)
 end
 
 function Entity.draw(self)
-  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
+  local center = self.Transform.position + self.Body.size * 0.5
+  love.graphics.circle('fill',center.x, center.y, 4 )
+  --love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
 end
 
 

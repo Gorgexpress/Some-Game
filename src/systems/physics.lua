@@ -1,5 +1,7 @@
 local Bump = require 'lib/bump'
 local vec2 = require 'lib/vec2'
+local Vec2l = require 'lib/vector-light'
+local dot = Vec2l.dot
 local PolygonCollision = require 'lib/polygon-collision'
 local acos, abs, min = math.acos, math.abs, math.min
 
@@ -9,12 +11,66 @@ local PhysicsSystem = {}
 
 
 local function bumpCollision2(self, other, normal)
-  local position = other.Transform.position + other.Body.offset + other.Body.size * 0.5
-  local desired = math.atan2(position.y - self.center.y, position.x - self.center.x)
-  local current = math.atan2(self.Transform.forward.y, self.Transform.forward.x)
-  local diff = desired - current
-  if math.abs(diff) > math.pi then diff = -(diff - math.pi) end
-  print(diff)
+  --player always loses if idle
+  if self.state == 'idle' then
+    self:onCollision(other, 'bumped')
+    other:onCollision(self, 'bumper')
+    return
+  end
+  --We want the signed angle between two vectors, with the vectors being a forward vector extending
+  --from the corresponding entity's position
+  local p1 = self.center
+  local p2 = (other.Transform.position + other.Body.offset + other.Body.size * 0.5) 
+  local t1 = p1 * self.Transform.forward
+  local t2 = p2 * other.Transform.forward
+  local between = math.atan2(t2.y, t2.x) - math.atan2(t1.y, t1.x)
+  if between > math.pi then between = between - math.pi * 2
+  elseif between < -math.pi then between = between + math.pi * 2
+  end
+  local moe = 2
+  --[[case 0: has already been handled. The player being idle is a special case where they always lose.
+  case 1: if between roughly equals math.pi or -math.pi, head on collision
+  case 2: between == 0, someone was hit in the back. Who wins depends on the player's forward, the normal, and 
+  the difference between the entities' positions. The dot multiplication below is only to extract the necessary
+  value without an if statement. normal and forward will always have one axis set to 0.
+  case 3: if other cases arent met, someone was hit in the side. As mentioned before, only one value in the normal
+  and forward 2d vectors will be set. If someone was hit in the side, then which axis is set will be different
+  between the two entities' forwards. The winner is the one whos' forward has the same axis set as the collision normal]]
+  if math.abs(between) > math.abs(math.pi - 0.5) then --head on
+    --[[Imagine a ray is sent forward from the center of the player, in the direction the player is facing. 
+    If that ray hits the enemy, the player is hurt. If it does not, then the player succeeds in damaging the enemy.
+    A variable  called "moe"(margin of error, not the japanese moe) is added to the comparisons. A positive value indicates
+    how many pixels into the enemy's hitbox is allowed before the attack becomes unsuccesful. A negative value will do the opposite
+    and make things harder.]]
+    local axis = normal.x ~= 0 and 'x' or 'y'
+    if p1[axis] <= other.Transform.position[axis] + moe or 
+    p1[axis] >= other.Transform.position[axis] + other.Body.offset[axis] + other.Body.size[axis] - moe then
+      self:onCollision(other, 'bumper')
+      other:onCollision(self, 'bumped')
+    else
+      self:onCollision(other, 'bumped')
+      other:onCollision(self, 'bumper') 
+    end
+  elseif between == 0 then -- backside hit
+    local d = p2 - p1
+    d.x, d.y = d.x * normal.x, d.y * normal.y
+    local sum = dot(normal.x, normal.y, 1, 1) - dot(self.Transform.forward.x, self.Transform.forward.y, 1, 1)
+    if sum ~= 0 then
+      self:onCollision(other, 'bumped')
+      other:onCollision(self, 'bumper')
+    else
+      self:onCollision(other, 'bumper')
+      other:onCollision(self, 'bumped')
+    end
+  else --side hit
+    if math.abs(normal.x) == math.abs(self.Transform.forward.x) or math.abs(normal.y) == math.abs(self.Transform.forward.y) then
+      self:onCollision(other, 'bumped')
+      other:onCollision(self, 'bumper')
+    else
+      self:onCollision(other, 'bumper')
+      other:onCollision(self, 'bumped')
+    end
+  end
 end
 
 
@@ -53,7 +109,6 @@ local function bumpCollision(self, other, normal, touch)
   local p1, p2 = self.Transform.position + self.Body.offset, other.Transform.position + other.Body.offset
   local f1, f2 = self.Transform.forward, other.Transform.forward
   local s1, s2 = self.Body.size, other.Body.size
-  bumpCollision2(self, other, normal)
   local depth_hit = 16
   local safe = 2
   if normal.y == -1 or normal.y == 1 then

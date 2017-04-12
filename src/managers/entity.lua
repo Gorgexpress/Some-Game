@@ -9,7 +9,7 @@ local m_size = 0
 local m_capacity = 0
 
 
-function EntityManager.add(entity, args)
+function EntityManager.add(entity, args, properties)
   if type(entity) == 'string' then
     local path = ENTITIES_PATH .. entity
     --if file not found in given path, search for it recursively in all directories in the entities folder
@@ -20,7 +20,7 @@ function EntityManager.add(entity, args)
       end
     end
     local class = require(path)
-    entity = class.new(args)
+    entity = class.new(args, properties)
   end
   m_size = m_size + 1
   if m_size >  m_capacity then m_capacity = m_size end 
