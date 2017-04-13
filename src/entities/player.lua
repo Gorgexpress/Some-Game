@@ -32,6 +32,7 @@ local grid = anim8.newGrid(40, 40, image:getWidth(), image:getHeight())
 local Entity = require 'src/managers/entity'
 local SoundManager = require 'src/managers/sound'
 local max, min = math.max, math.min
+local intersectsAABB, intersectsPolygon = Utility.AABB, require 'lib/polygon-collision'
 
 local Player = {}
 local Player_mt = {}
@@ -111,9 +112,11 @@ function Player.new(args)
     mp = 100,
     max_mp = 100,
     stunned_timer = 0,
-    --Unused right now. Will be used if I decide to factor in trajectory of the player in collisions.
-    old_x = 0,
-    old_y = 0,
+    --inner hitbox
+    ih_offsetx = body.offset.x + 4,
+    ih_offsety = body.offset.y + 4,
+    ih_sizex = 24,
+    ih_sizey = 24,
     render = true,
   }
   return setmetatable(entity, Player_mt)
@@ -122,6 +125,8 @@ end
 function Player.draw(self)
   if self.render then
     self.animator.current:draw(self.sprite, self.Transform.position:unpack())
+    local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
+    love.graphics.rectangle('fill', x, y, self.ih_sizex, self.ih_sizey)
   end
 end
 
@@ -143,6 +148,17 @@ function Player.onCollision(self, other, type)
       self.is_invincible = true
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'projectile' and not self.is_invincible then
+      --TODO put somewhere more appropriate.
+      --Player has a separate, smaller hitbox for non bump collisions (projectiles and normal attacks)
+      local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
+      local w, h = self.ih_sizex, self.ih_sizey
+      if other.Body.polygon then
+         if not intersectsPolygon({x, y, x + w, y, x + w, y + h, x, y + h}, other.Body.polygon) then return end
+      else
+        local x2, y2 = (other.Transform.position + other.Body.offset):unpack()
+        if not intersectsAABB(x, y, w, h, x2, y2, other.Body.size:unpack()) then return end
+      end
+      if other.onCollision then other:onCollision(self, 'playerih') end
       self.health = max(self.health - (other.Body.damage or 0), 0) 
       self.Velocity = Vec2(0, 0)
       self.state = 'stunned'

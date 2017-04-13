@@ -6,6 +6,9 @@ local Entity = require 'src/managers/entity'
 local Timer = require 'lib/timer'
 local Vec2 = require 'lib/vec2'
 local UI = require 'src/managers/ui'
+local Game = require 'src/game'
+local Player = require 'src/entities/player'
+local addEntity = Entity.add
 local debug = false
 local pause = false
 
@@ -14,25 +17,45 @@ local INTERNAL_HEIGHT = 768
 local scale
 
 local player 
+local map
+local world = {}
+local camera
 
 function love.load()
-  map = sti("assets/maps/test.lua", {"bump"})
-  local world = {}
-  world.width = map.width * map.tilewidth
-  world.height = map.height * map.tileheight
-  Entity.setWorld(map)
-
-  player = Entity.add('player', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y)})
+  player = Player({position = Vec2(500, 500)})
   g_player = player
-  Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
-  Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
+  Game.player = player
+  loadMap('101')
+  --Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
+  --Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
   --Entity.add('enemies/bosses/boss1', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y - 250)})
-  camera = gamera.new(0, 0, world.width, world.height)
-  camera:setPosition(g_player.Transform.position.x, g_player.Transform.position.y)
   love.graphics.setDefaultFilter("nearest","nearest")
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
   --camera:setScale(1.4)
+end
 
+function loadMap(level, id)
+  map = sti("assets/maps/"..level..".lua", {"bump"})
+  world.width = map.width * map.tilewidth
+  world.height = map.height * map.tileheight
+  Entity.setWorld(map)
+  --TODO make triggers a separate layer
+  for k, v in ipairs(map.layers.Sprite.objects) do
+    if v.properties.entity then
+      addEntity(v.properties.entity, {position = Vec2(v.x, v.y)})
+    end
+    if v.properties.entrance and v.properties.entrance == id then
+      player.Transform.position = Vec2(v.x, v.y)
+    end
+  end
+  addEntity(player)
+  for k, v in ipairs(map.layers.Sprite.objects) do
+    if v.properties.exitmap then
+      addEntity('triggers/exit', {position = Vec2(v.x, v.y), size = Vec2(v.width, v.height), exitmap = v.properties.exitmap, exitid = v.properties.exitid})
+    end
+  end
+  camera = gamera.new(0, 0, world.width, world.height)
+  camera:setPosition(player.Transform.position.x, player.Transform.position.y)
 end
     
 function love.update(dt)
@@ -41,7 +64,7 @@ function love.update(dt)
   Timer.update(dt)
 end
 
-local function camera_draw(l, t, w, h)
+local function cameraDraw(l, t, w, h)
   map:setDrawRange(l, t, w, h)
   map:draw()
   for _, entity in ipairs(Entity.entities) do
@@ -52,7 +75,7 @@ end
 
 function love.draw()
   camera:setPosition(player.Transform.position.x, player.Transform.position.y) 
-  camera:draw(camera_draw)
+  camera:draw(cameraDraw)
   UI.draw(player)
   love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end

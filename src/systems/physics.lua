@@ -1,4 +1,5 @@
 local Bump = require 'lib/bump'
+local Game = require 'src/game'
 local vec2 = require 'lib/vec2'
 local Vec2l = require 'lib/vector-light'
 local dot = Vec2l.dot
@@ -74,7 +75,7 @@ local function bumpCollision2(self, other, normal)
 end
 
 
---TODO move this into player.lua or a utility function.
+--TODO? move this into player.lua or a utility function.
 --[[
 The self variable always refers to the player here. The normal variable is always in respect to the player too.
 3 cases here.
@@ -259,8 +260,15 @@ function PhysicsSystem.update(entities, num_entities, dt)
             end
           --end aabb vs polygon code
           else --only standard aabb vs aabb collisions remain at this point
-            if entity.onCollision then entity:onCollision(col.other, col.other.Body.type) end
-            if col.other.onCollision then col.other:onCollision(entity, entity.Body.type) end
+            if entity.onCollision then 
+            local exit = entity:onCollision(col.other, col.other.Body.type) 
+              if exit then return end
+            end
+            if col.other.onCollision then 
+              --TODO handle level change triggers somewhere else
+              local exit = col.other:onCollision(entity, entity.Body.type)
+              if exit then return end 
+            end
           end
         elseif col.other.properties then --tile collision. 
           --aabb vs tile
@@ -300,6 +308,10 @@ function PhysicsSystem.onDestroy(entity)
   if entity.Body then
     m_physics:remove(entity)
   end
+end
+
+function PhysicsSystem.clear()
+  m_physics = nil
 end
 
 function PhysicsSystem.updateRectSize(entity, width, height)
@@ -356,8 +368,14 @@ function PhysicsSystem.drawCollision(entities, num_entities)
   love.graphics.setColor(r, g, b, a)
 end
 
+function PhysicsSystem.queryRect(x1, y1, x2, y2, filter)
+  return m_physics:queryRect(x1, y1, x2, y2, filter)
+end
+
 function PhysicsSystem.querySegment(x1, y1, x2, y2, filter)
   return m_physics:querySegment(x1, y1, x2, y2, filter)
 end
+
+Game.physics = PhysicsSystem
 
 return PhysicsSystem

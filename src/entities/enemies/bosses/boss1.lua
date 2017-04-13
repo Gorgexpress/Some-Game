@@ -2,10 +2,11 @@ local Vec2 = require 'lib/vec2'
 local addEntity = require('src/managers/entity').add
 local Bullet = require 'src/entities/projectiles/bullet'
 local rain = require 'src/entities/patterns/rain'
+local Timer = require 'lib/timer'
 local Entity = {}
 local Entity_mt = {}
 
-local THINK_TIME = 1
+local THINK_TIME = 2.5
 
 local function bulletFilter(self, other)
   if other.properties or other == g_player then return 'cross' end
@@ -40,32 +41,37 @@ local function fire1(self)
   local dir = (self.target.center - center):normalize()
   local n = math.random()
   if n > 0.3 then
-    rain(center.x, center.y, 0, 1, 250, 1, {0.0, 0.2, 0.8, 1, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 300, 1, {0.0, 0.2, 1, 1.2, 1.4, 1.6})
   else
-    rain(center.x, center.y, 0, 1, 250, 1, {0.0, 0.2, 0.4, 0.6, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 300, 1, {0.0, 0.2, 0.4, 0.6, 1.4, 1.6})
   end
 end
 
 function Entity.think(self)
- 
+  self.Timer:every(0.35, function() fire1(self) end, 3)
+  self.Timer:tween(1.5, self.Transform.position, {x = self.target.center.x}, 'linear')
+  self.Timer:after(1.5, function()
+    self.Timer:tween(0.5, self.Transform.position, {x = self.target.center.x}, 'linear') end)
 end
 
 
 function Entity.onCollision(self, other, type)
-  
+  if type == 'p_projectile' then
+    self.health = math.max(self.health - (other.Body.damage or 0), 0) 
+    if self.health <= 0 then self.destroyed = true end
+  end
 end
 
 function Entity.draw(self)
-  local center = self.Transform.position + self.Body.size * 0.5
-  love.graphics.circle('fill',center.x, center.y, 4 )
-  --love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
+  love.graphics.rectangle('fill', self.Transform.position.x, self.Transform.position.y, self.Body.size:unpack())   
 end
 
 
 function Entity.update(self, dt)
+  self.Timer:update(dt)
   self.think_timer = self.think_timer - dt
   if self.think_timer <= 0 then
-    fire1(self)
+    self:think()
     self.think_timer = THINK_TIME
   end
 end
@@ -88,9 +94,10 @@ function Entity.new(args)
     Body = body,
     Velocity = args.velocity or Vec2(0, 0),
     state = 'idle',
-    think_timer = THINK_TIME,
+    think_timer = 1,
     health = 50,
     max_health = 50,
+    Timer = Timer.new(),
     target = args.target or g_player
   }
   return setmetatable(entity, Entity_mt)

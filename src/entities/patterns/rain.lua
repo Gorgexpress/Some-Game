@@ -26,8 +26,8 @@ end
 
 local function spawnBulletFunction(position, velocity, damage) 
   local body = {
-    size = Vec2(4, 14),
-    offset = Vec2(5, 1),
+    size = Vec2(4, 10),
+    offset = Vec2(5, 3),
     type = 'projectile',
     damage = damage,
     filter = filter,

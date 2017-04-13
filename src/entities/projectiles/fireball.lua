@@ -6,7 +6,7 @@ local Entity_mt = {}
 
 function Entity.onCollision(self, other, type)
   if type then
-    if type == 'bump' or type == 'tile' then
+    if type == 'bump' or type == 'tile' or type == 'boss' then
       self.destroyed = true
     end
   end
@@ -44,9 +44,6 @@ function Entity.new(args)
       filter = args.filter or filter,
       type = args.type or 'p_projectile',
       damage = args.damage or 1,
-      properties = {
-        damage = args.damage or 1,
-      },
   }
   local entity = {
     Transform = transform,

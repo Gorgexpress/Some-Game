@@ -21,7 +21,7 @@ local image = Asset.getImage('graphics/projectiles/bullet2')
 local quad = love.graphics.newQuad(32, 0, 16, 16, image:getDimensions())
 
 function Entity.onCollision(self, other, type)
-  if type == 'player' or type == 'tile' then
+  if type == 'playerih' or type == 'tile' then
     self.destroyed = true
   end
 end
