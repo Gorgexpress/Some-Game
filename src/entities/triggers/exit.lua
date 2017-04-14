@@ -47,7 +47,7 @@ function Entity.new(args)
     size = args.size or Vec2(1, 1),
     offset = Vec2(0, 0),
     filter = filter,
-    type = 'exit',
+    type = 'tile',
   }
 
   local entity = {

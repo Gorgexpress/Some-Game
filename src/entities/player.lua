@@ -148,8 +148,10 @@ function Player.onCollision(self, other, type)
       self.is_invincible = true
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'projectile' and not self.is_invincible then
-      --TODO put somewhere more appropriate.
       --Player has a separate, smaller hitbox for non bump collisions (projectiles and normal attacks)
+      --[[-TODO? put somewhere more appropriate. This works for now, but if I make a system that 
+      aligns certain children entities with a a parent entity, I could make the inner hitbox
+      a separate entity, which will make this either less confusing or more confusing]]
       local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
       local w, h = self.ih_sizex, self.ih_sizey
       if other.Body.polygon then

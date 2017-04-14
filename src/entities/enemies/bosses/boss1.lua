@@ -1,7 +1,9 @@
 local Vec2 = require 'lib/vec2'
 local addEntity = require('src/managers/entity').add
 local Bullet = require 'src/entities/projectiles/bullet'
+local BigLaser = require 'src/entities/projectiles/big_laser'
 local rain = require 'src/entities/patterns/rain'
+local spawner = require 'src/projectile-spawner'
 local Timer = require 'lib/timer'
 local Entity = {}
 local Entity_mt = {}
@@ -30,7 +32,7 @@ local big_bullet_body = {
 
 
 local function filter(self, other)
-  if not other.Body or other.Body.type == 'player' then return 'slide'
+  if not other.Body then return 'slide'
   elseif other.Body.type == 'projectile' then return nil
   else return 'cross'
   end
@@ -71,6 +73,16 @@ function Entity.update(self, dt)
   if self.think_timer <= 0 then
     self:think()
     self.think_timer = THINK_TIME
+  end
+  if self.health < 35 and not self.laser then
+    self.laser = addEntity('projectiles/big_laser', {position = self.Transform.position + self.Body.size})
+  end
+  if self.laser then
+    self.laser.Transform.position.x = (self.Transform.position.x + self.Body.size.x * 0.5) - self.laser.Body.size.x * 0.5
+  end
+  if self.health < 49 and not self.fastlaser then
+    spawner.fire(self.Transform.position, Vec2(0, 500),'fastlaser')
+    self.fastlaser = true
   end
 end
 

@@ -61,7 +61,12 @@ local function scriptUpdate(self)
     --spawns another laser (a separate entity) from the current one
     iterate(self) 
     --determine when the back vertices will touch the front ones
+    --be careful of division by 0. nan will return false when compared with itself
     local shorten_time = abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x)
+    if shorten_time ~= shorten_time then
+      shorten_time = abs((self.Body.polygon[4] - self.Body.polygon[6]) / self.velocity.y)
+    end
+    if shorten_time ~= shorten_time then shorten_time = 0 end
     --linger_time causes the laser to delay moving to the shorten state. None of the vertices move in this state
     if self.linger_time > 0 then
       self.state = 'linger'
@@ -78,7 +83,13 @@ function Entity.onCollision(self, other, type)
   if type == 'tile' and self.state ~= 'shorten' then
     self.state = 'shorten'
     self.Timer:clear()
-    self.Timer:after(abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x), function() self.state = 'destroyed' end)
+    if self.velocity.x ~= 0 then
+      self.Timer:after(abs((self.Body.polygon[3] - self.Body.polygon[5]) / self.velocity.x), function() self.state = 'destroyed' end)
+    elseif self.velocity.y ~= 0 then
+      self.Timer:after(abs((self.Body.polygon[4] - self.Body.polygon[6]) / self.velocity.x), function() self.state = 'destroyed' end)
+    else
+      self.state = 'destroyed'
+    end
   elseif type == 'player' then
   end
 end

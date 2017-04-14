@@ -1,5 +1,7 @@
 local Vec2 = require 'lib/vec2'
 local Vec2l = require 'lib/vector-light'
+local Game = require 'src/game'
+local defs = require 'src/entities/projectiles/definitions'
 local add, sub, mul, normalize = Vec2l.add, Vec2l.sub, Vec2l.mul, Vec2l.normalize
 local sqrt = math.sqrt
 local EntityManager = require 'src/managers/entity'
@@ -7,10 +9,17 @@ local addEntity = EntityManager.add
 
 local ProjectileSpawner = {}
 
-local _player = g_player
+local _player = Game.player
+
+
 
 function ProjectileSpawner.fire(position, velocity, type, properties)
-  addEntity('projectiles/'..type, {position = position:clone(), velocity = velocity:clone()}, properties)
+  if defs[type] then
+    local proj = defs[type](position.x, position.y, velocity.x, velocity.y)
+    addEntity(proj)
+  else
+    addEntity('projectiles/'..type, {position = position:clone(), velocity = velocity:clone()}, properties)
+  end
 end
 
 function ProjectileSpawner.fireAtPosition(self, target, type)
