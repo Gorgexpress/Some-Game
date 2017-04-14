@@ -32,7 +32,8 @@ function Entity.draw(self)
   end
   if self.is_rotated then
     local x, y =  self.Transform.position:unpack()
-    draw(self.image, self.quad, x, y, self.Transform.forward:to_polar())
+    local theta = self.Transform.forward:angle_between(Vec2.unit_y)
+    draw(self.image, self.quad, x + 8, y + 8, theta, 1, 1, 8, 8)
   else
     draw(self.image, self.quad, self.Transform.position:unpack())
   end
@@ -55,7 +56,7 @@ function Entity.new(args, properties)
   }
   local body = args.body or {
     size = Vec2(4, 4),
-    offset = Vec2(6, 6),
+    offset = Vec2(5, 5),
     filter = args.filter or filter,
     type = args.type or 'projectile',
     damage = 1,
@@ -69,7 +70,7 @@ function Entity.new(args, properties)
     image = image,
     quad = quad,
   }
-
+  transform.position.x, transform.position.y = transform.position.x - body.offset.x - body.size.x * 0.5, transform.position.y - body.offset.y - body.size.y * 0.5
   if properties then
     for k, v in pairs(properties) do
       entity[k] = v

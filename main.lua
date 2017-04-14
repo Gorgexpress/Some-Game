@@ -166,8 +166,6 @@ function love.gamepadreleased(joystick, button)
   elseif button == 'dpright' then action = 'right'
   elseif button == 'dpleft' then action = 'left'
   elseif button == 'a' then action = 'combo2'
-  elseif button == 'back' then action = 'debug'
-  elseif button == 'start' then action = 'pause'
   end
   if actions[action] then
     input_state[action] = not input_state[action]

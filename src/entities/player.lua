@@ -126,7 +126,7 @@ function Player.draw(self)
   if self.render then
     self.animator.current:draw(self.sprite, self.Transform.position:unpack())
     local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
-    love.graphics.rectangle('fill', x, y, self.ih_sizex, self.ih_sizey)
+    --love.graphics.rectangle('fill', x, y, self.ih_sizex, self.ih_sizey)
   end
 end
 

@@ -41,9 +41,9 @@ local function fire1(self)
   local dir = (self.target.center - center):normalize()
   local n = math.random()
   if n > 0.3 then
-    rain(center.x, center.y, dir.x, dir.y, 300, 1, {0.0, 0.2, 1, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 400, 1, {0.0, 0.2, 1, 1.2, 1.4, 1.6})
   else
-    rain(center.x, center.y, dir.x, dir.y, 300, 1, {0.0, 0.2, 0.4, 0.6, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 400, 1, {0.0, 0.2, 0.4, 0.6, 1.4, 1.6})
   end
 end
 
