@@ -41,8 +41,8 @@ local SIN45 = 0.70710678118
 local STUN_TIME = 0.75
 local INVINCIBILITY_TIME = 1.5
 local CHARGE_TIME = 0.75
-local RATE_OF_FIRE = 0.2
-local MP_REGEN_RATE = 50
+local RATE_OF_FIRE = 0.1
+local MP_REGEN_RATE = 75
 local MP_COST = 20
 
 
@@ -248,7 +248,11 @@ function Player.move(self, dir_x, dir_y)
 end
 
 function Player.action1(self)
-  if not self.rate_limited and self.mp >= MP_COST then
+  if self.rate_limited then 
+    self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
+    return 
+  end
+  if self.mp >= MP_COST and not self.rate_limited then
     Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.velocity_dir * 500})
     self.mp = self.mp - MP_COST
   end
@@ -263,6 +267,8 @@ function Player.action2(self)
       local velocity = self.velocity_dir:is_zero() and self.Transform.forward or self.Velocity:normalize()
       Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.velocity_dir * 500, damage = 4, radius = 12})
       self.mp = self.mp - MP_COST * 3
+      self.rate_limited = true
+      Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
     end
     self.charged = false
   end
