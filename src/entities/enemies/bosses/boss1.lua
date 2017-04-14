@@ -49,9 +49,7 @@ end
 
 function Entity.think(self)
   self.Timer:every(0.35, function() fire1(self) end, 3)
-  self.Timer:tween(1.5, self.Transform.position, {x = self.target.center.x}, 'linear')
-  self.Timer:after(1.5, function()
-    self.Timer:tween(0.5, self.Transform.position, {x = self.target.center.x}, 'linear') end)
+  self.Timer:tween(2.5, self.Transform.position, {x = self.target.center.x}, 'out-cubic')
 end
 
 

@@ -25,13 +25,13 @@ function love.load()
   player = Player({position = Vec2(500, 500)})
   g_player = player
   Game.player = player
+  scale = love.graphics.getHeight() / INTERNAL_HEIGHT
   loadMap('101')
   --Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
   --Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
   --Entity.add('enemies/bosses/boss1', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y - 250)})
   love.graphics.setDefaultFilter("nearest","nearest")
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
-  --camera:setScale(1.4)
 end
 
 function loadMap(level, id)
@@ -55,6 +55,7 @@ function loadMap(level, id)
     end
   end
   camera = gamera.new(0, 0, world.width, world.height)
+  camera:setScale(scale)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y)
 end
     
