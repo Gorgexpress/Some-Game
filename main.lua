@@ -8,6 +8,7 @@ local Vec2 = require 'lib/vec2'
 local UI = require 'src/managers/ui'
 local Game = require 'src/game'
 local Player = require 'src/entities/player'
+local ProFi = require 'lib/profi'
 local addEntity = Entity.add
 local debug = false
 local pause = false

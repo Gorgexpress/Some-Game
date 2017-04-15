@@ -59,7 +59,6 @@ end
 
 function Entity.update(self, dt)
   self.ps:update(dt)
- --self.ps:moveTo(self.Transform.position.x + 8, self.Transform.position.y)
   if self.delay > 0 then
     self.delay = self.delay - dt
     return

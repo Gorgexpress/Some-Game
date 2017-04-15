@@ -1,5 +1,6 @@
 local PhysicsSystem = require 'src/systems/physics'
 local VelocitySystem = require 'src/systems/velocity'
+local ChildSystem = require 'src/systems/child'
 local Signal = require 'lib/signal'
 local FileSystem = love.filesystem
 local ENTITIES_PATH = 'src/entities/'
@@ -82,8 +83,9 @@ function EntityManager.update(dt)
     _size = _size - 1
   end
   --for the rest of the function, the entities we work on are guaranteed to not be nil or flagged for destruction
-  --update physics
+  --Update systems. Order is important! 
   VelocitySystem.update(_entities, _size, dt)
+  ChildSystem.update(_entities, _size, dt)
   PhysicsSystem.update(_entities, _size, dt)
 end
 
