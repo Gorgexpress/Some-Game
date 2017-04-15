@@ -13,7 +13,6 @@ local addEntity = Entity.add
 local debug = false
 local pause = false
 
-
 local INTERNAL_HEIGHT = 768
 local scale
 
@@ -27,7 +26,7 @@ function love.load()
   g_player = player
   Game.player = player
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
-  loadMap('101')
+  loadMap('103')
   --Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
   --Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
   --Entity.add('enemies/bosses/boss1', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y - 250)})
@@ -62,6 +61,7 @@ function loadMap(level, id)
 end
     
 function love.update(dt)
+
   if pause then return end
   Entity.update(dt)
   Timer.update(dt)
