@@ -12,7 +12,7 @@ local Entity_mt = {}
 
 local _image = Asset.getImage('graphics/projectiles/bullet2')
 local _quad = love.graphics.newQuad(16, 20, 16, 1, _image:getDimensions())
-local _quad2 = love.graphics.newQuad(32, 0, 16, 16, _image:getDimensions())
+local _quad2 = love.graphics.newQuad(48, 16, 16, 16, _image:getDimensions())
 
 local function updateBoundingBox(self)
   Physics.updateRectSize(self, self.Body.size:unpack())
@@ -49,7 +49,7 @@ function Entity.draw(self)
   if self.delay <= 0 then
     love.graphics.draw(_image, _quad, self.Transform.position.x, self.Transform.position.y, 0, 1, self.Body.size.y)
   end
-  love.graphics.draw(self.ps)
+  love.graphics.draw(self.ps, self.Transform.position.x + self.Body.size.x * 0.5, self.Transform.position.y)
 end
 
 local function filter(self, other)
@@ -59,7 +59,7 @@ end
 
 function Entity.update(self, dt)
   self.ps:update(dt)
-  self.ps:moveTo(self.Transform.position.x + 8, self.Transform.position.y)
+ --self.ps:moveTo(self.Transform.position.x + 8, self.Transform.position.y)
   if self.delay > 0 then
     self.delay = self.delay - dt
     return
@@ -101,13 +101,14 @@ function Entity.new(args)
   --TODO give this its own file
   local ps = love.graphics.newParticleSystem(_image, 20)
   ps:setParticleLifetime(0.25)
-  ps:setRadialAcceleration(-500)
-  ps:setAreaSpread('uniform', 50, 50)
+  ps:setRadialAcceleration(-2000)
+  ps:setAreaSpread('uniform', 80, 80)
   ps:setEmissionRate(5)
   entity.ps = ps
   ps:setQuads(_quad2)
   ps:start()
-  ps:moveTo(transform.position:unpack())
+  --ps:moveTo(transform.position:unpack())
+  ps:setRelativeRotation('true')
   ps:setEmitterLifetime(2.5)
   return setmetatable(entity, Entity_mt)
 end

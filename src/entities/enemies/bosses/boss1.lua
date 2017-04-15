@@ -74,16 +74,16 @@ function Entity.update(self, dt)
     self:think()
     self.think_timer = THINK_TIME
   end
-  if self.health < 35 and not self.laser then
+  if self.health < 49 and not self.laser then
     self.laser = addEntity('projectiles/big_laser', {position = self.Transform.position + self.Body.size})
   end
   if self.laser then
     self.laser.Transform.position.x = (self.Transform.position.x + self.Body.size.x * 0.5) - self.laser.Body.size.x * 0.5
   end
-  if self.health < 49 and not self.fastlaser then
-    spawner.fire(self.Transform.position, Vec2(0, 500),'fastlaser')
-    self.fastlaser = true
-  end
+  --if self.health < 49 and not self.fastlaser then
+    --spawner.fire(self.Transform.position.x, self.Transform.position.y, 0, 500,'fastlaser')
+    --self.fastlaser = true
+  --end
 end
 
 function Entity.new(args) 

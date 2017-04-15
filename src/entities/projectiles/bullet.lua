@@ -32,7 +32,9 @@ function Entity.draw(self)
   end
   if self.is_rotated then
     local x, y =  self.Transform.position:unpack()
-    local theta = self.Transform.forward:angle_between(Vec2.unit_y)
+    --local theta = self.Transform.forward:angle_between(Vec2.unit_x)
+    local _, theta = self.Transform.forward:to_polar()
+    print(theta)
     --hard coded right now, but offset should be half the size of the quad. See Quad:getViewport()
     draw(self.image, self.quad, x + 8, y + 8, theta, 1, 1, 8, 8)
   else

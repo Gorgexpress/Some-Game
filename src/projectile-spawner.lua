@@ -1,6 +1,7 @@
 local Vec2 = require 'lib/vec2'
 local Vec2l = require 'lib/vector-light'
 local Game = require 'src/game'
+local Laser = require 'src/entities/projectiles/laser'
 local defs = require 'src/entities/projectiles/definitions'
 local add, sub, mul, normalize = Vec2l.add, Vec2l.sub, Vec2l.mul, Vec2l.normalize
 local sqrt = math.sqrt
@@ -10,13 +11,12 @@ local addEntity = EntityManager.add
 local ProjectileSpawner = {}
 
 local _player = Game.player
+local _defs = {}
 
 
-
-function ProjectileSpawner.fire(position, velocity, type, properties)
-  if defs[type] then
-    local proj = defs[type](position.x, position.y, velocity.x, velocity.y)
-    addEntity(proj)
+function ProjectileSpawner.fire(x, y, vx, vy, type, properties)
+  if _defs[type] then
+    _defs[type](x, y, vx, vy)
   else
     addEntity('projectiles/'..type, {position = position:clone(), velocity = velocity:clone()}, properties)
   end
@@ -59,6 +59,10 @@ function ProjectileSpawner.fireAtPlayerFromCenter(self, speed, type, properties)
   local len = sqrt(dx * dx + dy * dy)
   local vx, vy = (dx / len) * speed, (dy / len) * speed 
   addEntity('projectiles/'..type, {position = Vec2(x1, y1), velocity = Vec2(vx, vy)}, properties)
+end
+
+function _defs.fastlaser(x, y, vx, vy)
+  addEntity(Laser{position = Vec2(x, y), velocity = Vec2(vx, vy), iterations = 1})
 end
 
 

@@ -54,6 +54,7 @@ function loadMap(level, id)
       addEntity('triggers/exit', {position = Vec2(v.x, v.y), size = Vec2(v.width, v.height), exitmap = v.properties.exitmap, exitid = v.properties.exitid})
     end
   end
+  map.layers.Sprite = nil
   camera = gamera.new(0, 0, world.width, world.height)
   camera:setScale(scale)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y)

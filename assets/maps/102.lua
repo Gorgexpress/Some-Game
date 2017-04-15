@@ -65,7 +65,7 @@ return {
     {
       type = "objectgroup",
       name = "Sprite",
-      visible = true,
+      visible = false,
       opacity = 1,
       offsetx = 0,
       offsety = 0,

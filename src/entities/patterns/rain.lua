@@ -6,7 +6,7 @@ local ProjectileSpawner = require 'src/projectile-spawner'
 local fire = ProjectileSpawner.fireAtPlayerFromCenter --(self, speed, type, properties)
 local Asset = require 'src/managers/asset'
 local image = Asset.getImage('graphics/projectiles/bullet2')
-local quad = love.graphics.newQuad(32, 16, 16, 16, image:getWidth(), image:getHeight())
+local quad = love.graphics.newQuad(32, 32, 16, 16, image:getWidth(), image:getHeight())
 
 local function bulletUpdate(self, dt)
   if self.timer > 0 then

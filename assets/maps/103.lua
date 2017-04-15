@@ -64,7 +64,7 @@ return {
     {
       type = "objectgroup",
       name = "Sprite",
-      visible = true,
+      visible = false,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
@@ -116,19 +116,6 @@ return {
           properties = {
             ["entity"] = "enemies/bosses/boss1"
           }
-        },
-        {
-          id = 11,
-          name = "",
-          type = "",
-          shape = "rectangle",
-          x = 864,
-          y = 192,
-          width = 0,
-          height = 0,
-          rotation = 0,
-          visible = true,
-          properties = {}
         }
       }
     }
