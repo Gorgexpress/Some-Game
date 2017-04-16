@@ -2,34 +2,32 @@ local Vec2 = require 'lib/vec2'
 local addEntity = require('src/managers/entity').add
 local Bullet = require 'src/entities/projectiles/bullet'
 local BigLaser = require 'src/entities/projectiles/big_laser'
-local rain = require 'src/entities/patterns/rain'
-local spawner = require 'src/projectile-spawner'
+local fire = require('src/projectile-spawner').fire
+local rotate = require('lib/vector-light').rotate
 local Timer = require 'lib/timer'
 local Entity = {}
 local Entity_mt = {}
 
 local THINK_TIME = 2.5
 
-local function bulletFilter(self, other)
-  if other.properties or other == g_player then return 'cross' end
-  return nil
+local function bulletUpdate(self, dt)
+  if self.Properties.timer > 0 then
+    self.Properties.timer = self.Properties.timer - dt
+    self.Velocity = self.Velocity:rotate(self.Properties.rotation_speed * dt)
+  end
 end
 
-local small_bullet_body = {
-  size = Vec2(6, 12),
-  offset = Vec2(0, 0),
-  type = 'projectile',
-  damage = 1,
-  filter = bulletFilter,
-}
-local big_bullet_body = {
-  size = Vec2(12, 24),
-  offset = Vec2(0, 0),
-  type = 'projectile',
-  damage = 1,
-  filter = bulletFilter,
-}
 
+local function rain(x, y, dirx, diry, speed, angles)
+  for k, v in ipairs(angles) do
+    local rotated_dirx, rotated_diry = rotate(v, dirx, diry)
+    fire('angledbullet', x, y, rotated_dirx * speed, rotated_diry * speed, bulletUpdate, {timer = 1, rotation_speed = -v})
+    if v ~= 0 then
+      rotated_dirx, rotated_diry = rotate(-v, dirx, diry)
+      fire('angledbullet', x, y, rotated_dirx * speed, rotated_diry * speed, bulletUpdate, {timer = 1, rotation_speed = v})
+    end
+  end
+end
 
 local function filter(self, other)
   if not other.Body then return 'slide'
@@ -43,9 +41,9 @@ local function fire1(self)
   local dir = (self.target.center - center):normalize()
   local n = math.random()
   if n > 0.3 then
-    rain(center.x, center.y, dir.x, dir.y, 400, 1, {0.0, 0.2, 1, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.2, 1, 1.2, 1.4, 1.6})
   else
-    rain(center.x, center.y, dir.x, dir.y, 400, 1, {0.0, 0.2, 0.4, 0.6, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.2, 0.4, 0.6, 1.4, 1.6})
   end
 end
 

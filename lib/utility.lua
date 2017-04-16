@@ -13,6 +13,10 @@ function Utility.center(position, size, offset)
   position.x, position.y = position.x - offset.x - size.x * 0.5, position.y - offset.y - size.y * 0.5
 end
 
+function Utility.centerEntity(x, y, w, h, ox, oy)
+  return x - ox - w * 0.5, y - oy - h * 0.5
+end
+
 function Utility.getCenter(self)
   return self.Transform.position + self.Body.offset + self.Body.size * 0.5
 end

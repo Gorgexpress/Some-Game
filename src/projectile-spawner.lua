@@ -2,7 +2,9 @@ local Vec2 = require 'lib/vec2'
 local Vec2l = require 'lib/vector-light'
 local Game = require 'src/game'
 local Laser = require 'src/entities/projectiles/laser'
+local Bullet = require 'src/entities/projectiles/bullet'
 local defs = require 'src/entities/projectiles/definitions'
+local Asset = require 'src/managers/asset'
 local add, sub, mul, normalize = Vec2l.add, Vec2l.sub, Vec2l.mul, Vec2l.normalize
 local sqrt = math.sqrt
 local EntityManager = require 'src/managers/entity'
@@ -14,9 +16,9 @@ local _player = Game.player
 local _defs = {}
 
 
-function ProjectileSpawner.fire(x, y, vx, vy, type, properties)
+function ProjectileSpawner.fire(type, x, y, vx, vy, update, properties)
   if _defs[type] then
-    _defs[type](x, y, vx, vy)
+    _defs[type](x, y, vx, vy, update, properties)
   else
     addEntity('projectiles/'..type, {position = position:clone(), velocity = velocity:clone()}, properties)
   end
@@ -61,9 +63,14 @@ function ProjectileSpawner.fireAtPlayerFromCenter(self, speed, type, properties)
   addEntity('projectiles/'..type, {position = Vec2(x1, y1), velocity = Vec2(vx, vy)}, properties)
 end
 
-function _defs.fastlaser(x, y, vx, vy)
+function _defs.basiclaser(x, y, vx, vy)
   addEntity(Laser{position = Vec2(x, y), velocity = Vec2(vx, vy), iterations = 1})
 end
 
+local _abimage = Asset.getImage('graphics/projectiles/bullet2')
+local _abquad = love.graphics.newQuad(32, 32, 16, 16, _abimage:getWidth(), _abimage:getHeight())
+function _defs.angledbullet(x, y, vx, vy, update, properties)
+  addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, _abimage, _abquad, 'true', update, properties))
+end
 
 return ProjectileSpawner

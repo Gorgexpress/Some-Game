@@ -12,13 +12,11 @@ local function filter(self, other)
 end
 
 local function filterOnSpawn(other)
-  print(other)
   if other ~= Game.player then return nil end
   return 'cross'
 end
 
 local function isPlayerColliding(self)
-  print(self.Transform.position, Game.player.Transform.position)
   local _, len = Game.physics.queryRect(self.Transform.position.x - 1, self.Transform.position.y - 1, self.Body.size.x + 1, self.Body.size.y + 1, filterOnSpawn)
   return len ~= 0 
 end
@@ -61,7 +59,6 @@ function Entity.new(args)
   }
   --
   if isPlayerColliding(entity) then
-    print("HI")
     entity.active = false
     entity.update = update
   end

@@ -1,6 +1,8 @@
 local Vec2 = require 'lib/vec2'
 local Asset = require 'src/managers/asset'
 local Timer = require 'lib/timer'
+local normalize = require('lib/vector-light').normalize
+local centerEntity = require('lib/utility').centerEntity
 local draw, setShader = love.graphics.draw, love.graphics.setShader
 
 local Entity = {}
@@ -31,9 +33,8 @@ function Entity.draw(self)
     setShader(shader)
   end
   if self.is_rotated then
-    local x, y =  self.Transform.position:unpack()
-    --local theta = self.Transform.forward:angle_between(Vec2.unit_x)
-    local _, theta = self.Transform.forward:to_polar()
+    local x, y = self.Transform.position:unpack()
+    local _, theta = self.Velocity:to_polar()
     --hard coded right now, but offset should be half the size of the quad. See Quad:getViewport()
     draw(self.image, self.quad, x + 8, y + 8, theta, 1, 1, 8, 8)
   else
@@ -50,42 +51,38 @@ local function filter(self, other)
 end
 
 
-function Entity.new(args, properties) 
+function Entity.new(x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, properties) 
+  x, y = centerEntity(x, y, w, h, ox, oy)
+  return setmetatable({
+    Transform = {
+      position = Vec2(x, y),
+    },
+    Body = {
+      size = Vec2(w, h),
+      offset = Vec2(ox, oy),
+      filter = filter,
+      type = 'projectile',
+      damage = 1,
+    },
+    Velocity = Vec2(vx, vy),
+    image = image or _image,
+    quad = quad or _quad,
+    is_rotated = isrotated,
+    update = update,
+    Properties = properties,
+  }, Entity_mt)
+end
 
-  local transform = args.transform or {
-    position = args.position or Vec2(0, 0),
-    forward = Vec2(0, -1),
-  }
-  local body = args.body or {
-    size = Vec2(4, 4),
-    offset = Vec2(5, 5),
-    filter = args.filter or filter,
-    type = args.type or 'projectile',
-    damage = 1,
-  }
-
-  local entity = {
-    Transform = transform,
-    Body = body,
-    Velocity = args.velocity or Vec2(0, 0),
-    update = args.update or nil,
-    image = image,
-    quad = quad,
-  }
-  transform.position.x, transform.position.y = transform.position.x - body.offset.x - body.size.x * 0.5, transform.position.y - body.offset.y - body.size.y * 0.5
-  if properties then
-    for k, v in pairs(properties) do
-      entity[k] = v
-    end
-  end
-
+function Entity.clone(self)
+  local entity = {}
+  for k, v in pairs(self) do entity[k] = v end
   return setmetatable(entity, Entity_mt)
 end
 
 Entity_mt.__index = Entity
 
-function Entity_mt.__call(_, args)
-    return Entity.new(args)
+function Entity_mt.__call(_, x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, properties)
+    return Entity.new(x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, properties)
 end
 
 return setmetatable({}, Entity_mt)

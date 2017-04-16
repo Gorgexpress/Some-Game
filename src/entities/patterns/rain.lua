@@ -16,13 +16,6 @@ local function bulletUpdate(self, dt)
   end
 end
 
-local function filter(self, other)
-  if other.properties or other == Game.player then
-    return 'cross'
-  end
-  return nil 
-end
-
 
 
 local function spawnBulletFunction(position, velocity, damage) 

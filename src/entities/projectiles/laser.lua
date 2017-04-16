@@ -178,6 +178,10 @@ function Entity.new(args)
   return setmetatable(entity, Entity_mt)
 end
 
+function Entity.clone(self)
+  --
+end
+
 Entity_mt.__index = Entity
 
 function Entity_mt.__call(_, args)
