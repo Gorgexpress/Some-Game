@@ -1,10 +1,11 @@
 local Vec2 = require 'lib/vec2'
 local Physics = require "src/systems/physics"
-local EntityManager = require 'src/managers/entity'
+local addEntity = require('src/managers/entity').add
 local Timer = require 'lib/timer'
 local Game = require 'src/game'
 local Asset = require 'src/managers/asset'
 local Utility = require 'lib/utility'
+local InwardsFX = require 'src/entities/gfx/inwards'
 local bbox = Utility.bbox
 local abs = math.abs
 local Entity = {}
@@ -49,7 +50,6 @@ function Entity.draw(self)
   if self.delay <= 0 then
     love.graphics.draw(_image, _quad, self.Transform.position.x, self.Transform.position.y, 0, 1, self.Body.size.y)
   end
-  love.graphics.draw(self.ps, self.Transform.position.x + self.Body.size.x * 0.5, self.Transform.position.y)
 end
 
 local function filter(self, other)
@@ -58,7 +58,6 @@ local function filter(self, other)
 end
 
 function Entity.update(self, dt)
-  self.ps:update(dt)
   if self.delay > 0 then
     self.delay = self.delay - dt
     return
@@ -97,18 +96,7 @@ function Entity.new(args)
     lifetime = args.lifetime or 4,
     delay = args.delay or 2.5,
   }
-  --TODO give this its own file
-  local ps = love.graphics.newParticleSystem(_image, 20)
-  ps:setParticleLifetime(0.25)
-  ps:setRadialAcceleration(-2000)
-  ps:setAreaSpread('uniform', 80, 80)
-  ps:setEmissionRate(5)
-  entity.ps = ps
-  ps:setQuads(_quad2)
-  ps:start()
-  --ps:moveTo(transform.position:unpack())
-  ps:setRelativeRotation('true')
-  ps:setEmitterLifetime(2.5)
+  entity.ps = addEntity(InwardsFX.new(entity, body.size.x * 0.5, 0))
   return setmetatable(entity, Entity_mt)
 end
 

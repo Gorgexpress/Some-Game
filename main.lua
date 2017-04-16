@@ -13,7 +13,7 @@ local addEntity = Entity.add
 local debug = false
 local pause = false
 
-local INTERNAL_HEIGHT = 768
+local INTERNAL_HEIGHT = 480
 local scale
 
 local player 

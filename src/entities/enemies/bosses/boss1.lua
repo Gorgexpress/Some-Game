@@ -21,10 +21,10 @@ end
 local function rain(x, y, dirx, diry, speed, angles)
   for k, v in ipairs(angles) do
     local rotated_dirx, rotated_diry = rotate(v, dirx, diry)
-    fire('angledbullet', x, y, rotated_dirx * speed, rotated_diry * speed, bulletUpdate, {timer = 1, rotation_speed = -v})
+    fire('angledbullet', x, y, rotated_dirx * speed, rotated_diry * speed, 10, bulletUpdate, {timer = 1, rotation_speed = -v})
     if v ~= 0 then
       rotated_dirx, rotated_diry = rotate(-v, dirx, diry)
-      fire('angledbullet', x, y, rotated_dirx * speed, rotated_diry * speed, bulletUpdate, {timer = 1, rotation_speed = v})
+      fire('angledbullet', x, y, rotated_dirx * speed, rotated_diry * speed, 10, bulletUpdate, {timer = 1, rotation_speed = v})
     end
   end
 end
@@ -41,9 +41,9 @@ local function fire1(self)
   local dir = (self.target.center - center):normalize()
   local n = math.random()
   if n > 0.3 then
-    rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.2, 1, 1.2, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6})
   else
-    rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.2, 0.4, 0.6, 1.4, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 400, {0.0,0.1, 0.2, 0.3, 0.4,0.5, 0.6, 1.4, 1.5, 1.6})
   end
 end
 
@@ -57,6 +57,7 @@ function Entity.onCollision(self, other, type)
   if type == 'p_projectile' then
     self.health = math.max(self.health - (other.Body.damage or 0), 0) 
     if self.health <= 0 then self.destroyed = true end
+    if self.health <= 15 then self.think_time = self.think_time / 2 end
   end
 end
 
@@ -70,7 +71,7 @@ function Entity.update(self, dt)
   self.think_timer = self.think_timer - dt
   if self.think_timer <= 0 then
     self:think()
-    self.think_timer = THINK_TIME
+    self.think_timer = self.think_time
   end
   if self.health < 49 and not self.laser then
     self.laser = addEntity('projectiles/big_laser', {position = self.Transform.position + self.Body.size})
@@ -106,7 +107,8 @@ function Entity.new(args)
     health = 50,
     max_health = 50,
     Timer = Timer.new(),
-    target = args.target or g_player
+    target = args.target or g_player,
+    think_time = THINK_TIME,
   }
   return setmetatable(entity, Entity_mt)
 end

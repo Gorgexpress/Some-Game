@@ -67,7 +67,7 @@ local function bumpCollision2(self, other, normal)
     if math.abs(normal.x) == math.abs(self.Transform.forward.x) or math.abs(normal.y) == math.abs(self.Transform.forward.y) then
       self:onCollision(other, 'bumped')
       other:onCollision(self, 'bumper')
-    else
+    elseif math.abs(normal.x) == math.abs(self.Transform.forward.x) or math.abs(normal.y) == math.abs(self.Transform.forward.y) then
       self:onCollision(other, 'bumper')
       other:onCollision(self, 'bumped')
     end

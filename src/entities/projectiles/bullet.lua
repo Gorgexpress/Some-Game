@@ -51,7 +51,7 @@ local function filter(self, other)
 end
 
 
-function Entity.new(x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, properties) 
+function Entity.new(x, y, vx, vy, w, h, ox, oy, damage, image, quad, isrotated, update, properties) 
   x, y = centerEntity(x, y, w, h, ox, oy)
   return setmetatable({
     Transform = {
@@ -62,7 +62,7 @@ function Entity.new(x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, 
       offset = Vec2(ox, oy),
       filter = filter,
       type = 'projectile',
-      damage = 1,
+      damage = damage,
     },
     Velocity = Vec2(vx, vy),
     image = image or _image,
@@ -82,7 +82,7 @@ end
 Entity_mt.__index = Entity
 
 function Entity_mt.__call(_, x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, properties)
-    return Entity.new(x, y, vx, vy, w, h, ox, oy, image, quad, isrotated, update, properties)
+    return Entity.new(x, y, vx, vy, w, h, ox, oy, damage, image, quad, isrotated, update, properties)
 end
 
 return setmetatable({}, Entity_mt)

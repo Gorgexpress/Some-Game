@@ -24,7 +24,7 @@ local Vec2 = require 'lib/vec2'
 local anim8 = require 'lib/anim8'
 local Timer = require 'lib/timer'
 local Asset = require 'src/managers/asset'
-local image = Asset.getImage('player3')
+local image = Asset.getImage('player2')
 local Utility = require 'lib/utility'
 local Signal = require 'lib/signal'
 local vecToDir = Utility.vecToDir
@@ -68,8 +68,8 @@ function Player.new(args)
     forward = Vec2(0, -1),
   }
   local body = {
-    size = Vec2(32, 32),
-    offset = Vec2(4, 8),
+    size = Vec2(14, 22),
+    offset = Vec2(8, 8),
     filter = playerFilter,
     type = 'player',
     damage = 1,
@@ -113,10 +113,10 @@ function Player.new(args)
     max_mp = 100,
     stunned_timer = 0,
     --inner hitbox
-    ih_offsetx = body.offset.x + 4,
-    ih_offsety = body.offset.y + 4,
-    ih_sizex = 24,
-    ih_sizey = 24,
+    ih_offsetx = 12,
+    ih_offsety = 18,
+    ih_sizex = 4,
+    ih_sizey = 4,
     render = true,
   }
   return setmetatable(entity, Player_mt)
@@ -149,9 +149,11 @@ function Player.onCollision(self, other, type)
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'projectile' and not self.is_invincible then
       --Player has a separate, smaller hitbox for non bump collisions (projectiles and normal attacks)
+      --disabled for now since i made the regular hitbox smaller
       --[[-TODO? put somewhere more appropriate. This works for now, but if I make a system that 
       aligns certain children entities with a a parent entity, I could make the inner hitbox
       a separate entity, which will make this either less confusing or more confusing]]
+      --[[
       local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
       local w, h = self.ih_sizex, self.ih_sizey
       if other.Body.polygon then
@@ -159,7 +161,7 @@ function Player.onCollision(self, other, type)
       else
         local x2, y2 = (other.Transform.position + other.Body.offset):unpack()
         if not intersectsAABB(x, y, w, h, x2, y2, other.Body.size:unpack()) then return end
-      end
+      end]]
       if other.onCollision then other:onCollision(self, 'playerih') end
       self.health = max(self.health - (other.Body.damage or 0), 0) 
       self.Velocity = Vec2(0, 0)
