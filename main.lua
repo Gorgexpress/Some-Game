@@ -60,16 +60,58 @@ function loadMap(level, id)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y)
 end
     
-function love.update(dt)
+local code =  [[
+extern vec3 iResolution;
+extern number iGlobalTime;
 
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+	vec2 uv = fragCoord.xy / iResolution.xy;
+    vec2 original = uv;
+    vec2 old = uv;
+    number n = 5.0;
+    number off = uv.y * n;
+    uv = fract(uv * n);
+    if (mod(off, 2.0) < 1.0) 
+    	uv.x = fract(uv.x - mod(iGlobalTime * 0.75, 10.0));
+    else {
+        uv.x = fract(uv.x + mod(iGlobalTime * 0.75, 10.0));
+        old.x = 1.0 - old.x;
+    }
+    number scale = iResolution.x / iResolution.y;
+    number resolution = 1000.0;
+    number height = resolution;
+    number width = resolution * scale;
+    vec2 dim = vec2(width, height) / n;
+    vec2 center = dim * 0.5;
+    number radius = 0.45 * (resolution / n);
+    if (distance(uv * dim, center) < radius)
+		fragColor = vec4(uv, sin(old.x),1.0);
+   	else
+        fragColor = vec4(original, 0.5 + sin(iGlobalTime)* 0.5, 0.0);
+}
+
+vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 pixel_coords){
+    vec2 fragCoord = texture_coords * iResolution.xy;
+    mainImage( color, fragCoord );
+    return color;
+}]]
+
+Game.time = 0
+
+local shader = love.graphics.newShader(code)
+function love.update(dt)
+  Game.time = Game.time + dt
   if pause then return end
   Entity.update(dt)
   Timer.update(dt)
 end
-
+local canvas = love.graphics.newCanvas(love.graphics.getDimensions())
 local function cameraDraw(l, t, w, h)
   map:setDrawRange(l, t, w, h)
-  map:draw()
+    love.graphics.draw(canvas,0,0)
+    map:draw()
   for _, entity in ipairs(Entity.entities) do
     entity:draw()
   end
@@ -77,6 +119,13 @@ local function cameraDraw(l, t, w, h)
 end
 
 function love.draw()
+  shader:send('iResolution', { love.graphics.getWidth(), love.graphics.getHeight(), 1 })
+  shader:send('iGlobalTime', Game.time)
+  love.graphics.setShader(shader)
+  love.graphics.draw(canvas)
+  love.graphics.setShader()
+  love.graphics.setCanvas()
+  love.graphics.draw(canvas,0,0)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y) 
   camera:draw(cameraDraw)
   UI.draw(player)

@@ -34,6 +34,7 @@ local addEntity = Entity.add
 local Fireball = require 'src/entities/projectiles/fireball'
 local InwardsFX = require 'src/entities/gfx/inwards'
 local SoundManager = require 'src/managers/sound'
+local Game = require 'src/game'
 local max, min = math.max, math.min
 local intersectsAABB, intersectsPolygon = Utility.AABB, require 'lib/polygon-collision'
 
@@ -48,12 +49,19 @@ local RATE_OF_FIRE = 0.1
 local MP_REGEN_RATE = 50
 local MP_COST = 20
 
+--TODO? move all this stuff in a separate file
 local _sfimage = Asset.getImage('graphics/projectiles/smallfire')
 local _sfquad = love.graphics.newQuad(32, 0, 16, 16, _sfimage:getDimensions())
 local _bfimage = Asset.getImage('graphics/projectiles/bigfire')
 local _bfquad = love.graphics.newQuad(64, 0, 32, 32, _bfimage:getDimensions())
 local _particlequad = love.graphics.newQuad(48, 16, 16, 16, _sfimage:getDimensions())
-
+local _shader = love.graphics.newShader[[
+    extern number iGlobalTime;
+    vec4 effect( vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords ){
+      vec4 pixel = Texel(texture, texture_coords );//This is the current pixel color
+      return pixel * (1.0 + (cos(iGlobalTime * 3.0) + 1.0));
+    }
+  ]]
 local function playerFilter(self, other)
   if other.Body and other.Body.type == 'projectile' then
     return 'cross'
@@ -135,8 +143,15 @@ end
 
 function Player.draw(self)
   if self.render then
-    self.animator.current:draw(self.sprite, self.Transform.position:unpack())
-    local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
+    if self.charged then
+      love.graphics.setShader(_shader)
+      _shader:send('iGlobalTime', self.time_since_charged)
+      self.animator.current:draw(self.sprite, self.Transform.position:unpack())
+      love.graphics.setShader()
+    else
+      self.animator.current:draw(self.sprite, self.Transform.position:unpack())
+    end
+    --local x, y = self.Transform.position.x + self.ih_offsetx, self.Transform.position.y + self.ih_offsety
     --love.graphics.rectangle('fill', x, y, self.ih_sizex, self.ih_sizey)
   end
 end
@@ -192,7 +207,8 @@ function Player.update(self, dt)
   self.center.y = self.Transform.position.y + self.Body.offset.y + self.Body.size.y * 0.5
   self.mp = min(self.mp + MP_REGEN_RATE * dt, self.max_mp)
   self.timer:update(dt)
-  self.old_x, self.old_y = self.Transform.position.x + self.Body.offset.x, self.Transform.position.y + self.Body.offset.y
+  if self.charged then self.time_since_charged = self.time_since_charged + dt end
+  --self.old_x, self.old_y = self.Transform.position.x + self.Body.offset.x, self.Transform.position.y + self.Body.offset.y
   if self.state == 'running' and self.time_running < self.seconds_to_max_speed then
     self.time_running = math.min(self.time_running + dt, self.seconds_to_max_speed)
     self.speed = self.max_speed * (self.time_running / self.seconds_to_max_speed)
@@ -227,14 +243,12 @@ function Player.move(self, dir_x, dir_y)
       self.time_running = 0
     else 
       if dir_x == 0 or dir_y == 0 then
-        --self.Velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
         self.velocity_dir = Vec2(dir_x, dir_y)
         self.Transform.forward.x, self.Transform.forward.y = dir_x, dir_y
         if self.time_running == self.seconds_to_max_speed then
           self.Velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
         end
       else
-        --self.Velocity = Vec2(self.speed * SIN45 * dir_x, self.speed * SIN45 * dir_y)
         self.velocity_dir = Vec2(SIN45 * dir_x, SIN45 * dir_y)
         if self.time_running == self.seconds_to_max_speed then
           self.Velocity = Vec2(SIN45 * self.speed * dir_x, SIN45 * self.speed * dir_y)
@@ -246,19 +260,6 @@ function Player.move(self, dir_x, dir_y)
         self.state = 'running'
       end
     end
-    return true
-  else --in a state where we cant move, buffer input.
-    --if dir_x == 0 and dir_y == 0 then 
-      --self.Velocity.frictionless.direction = Vec2(dir_x, dir_y)
-   -- else 
-      --if dir_x == 0 or dir_y == 0 then
-        --self.Velocity.frictionless.direction = Vec2(dir_x, dir_y)
-        --self.buffer.direction = Vec2(dir_x, dir_y)
-      --else
-        --self.Velocity.frictionless.direction = Vec2(SIN45 * dir_x, SIN45 * dir_y)
-      --end
-    --end
-    return false
   end
 end
 
@@ -272,7 +273,10 @@ function Player.action1(self)
     addEntity(Fireball(self.center.x, self.center.y, self.velocity_dir.x * 500, self.velocity_dir.y * 500, 16, 16, 0, 0, 1, _sfimage, _sfquad))
     self.mp = self.mp - MP_COST
   end
-  self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
+  self.charge_handle = Timer.after(CHARGE_TIME, function() 
+    self.charged = true
+    self.time_since_charged = 0 
+  end)
   self.ps_handle = Timer.after(0.2, function() self.ps:start() end)
   self.rate_limited = true
   Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
@@ -287,12 +291,12 @@ function Player.action2(self)
       self.mp = self.mp - MP_COST * 2
       self.rate_limited = true
       self.ps_handle = nil
-      self.ps.ps:stop()
       Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
     end
     self.charged = false
   end
   if self.charge_handle then Timer.cancel(self.charge_handle) end
+  self.ps.ps:stop()
   if self.ps_handle then Timer.cancel(self.ps_handle) end
 end
 
