@@ -30,6 +30,9 @@ local Signal = require 'lib/signal'
 local vecToDir = Utility.vecToDir
 local grid = anim8.newGrid(32, 32, image:getWidth(), image:getHeight(), 0, 0, 2)
 local Entity = require 'src/managers/entity'
+local addEntity = Entity.add
+local Fireball = require 'src/entities/projectiles/fireball'
+local InwardsFX = require 'src/entities/gfx/inwards'
 local SoundManager = require 'src/managers/sound'
 local max, min = math.max, math.min
 local intersectsAABB, intersectsPolygon = Utility.AABB, require 'lib/polygon-collision'
@@ -45,6 +48,11 @@ local RATE_OF_FIRE = 0.1
 local MP_REGEN_RATE = 50
 local MP_COST = 20
 
+local _sfimage = Asset.getImage('graphics/projectiles/smallfire')
+local _sfquad = love.graphics.newQuad(32, 0, 16, 16, _sfimage:getDimensions())
+local _bfimage = Asset.getImage('graphics/projectiles/bigfire')
+local _bfquad = love.graphics.newQuad(64, 0, 32, 32, _bfimage:getDimensions())
+local _particlequad = love.graphics.newQuad(48, 16, 16, 16, _sfimage:getDimensions())
 
 local function playerFilter(self, other)
   if other.Body and other.Body.type == 'projectile' then
@@ -119,6 +127,9 @@ function Player.new(args)
     ih_sizey = 4,
     render = true,
   }
+  entity.ps = addEntity(InwardsFX.new(entity, entity.center.x - transform.position.x, entity.center.y - transform.position.y, _sfimage, _particlequad))
+  entity.ps.ps:stop()
+  entity.ps.ps:setEmitterLifetime(-1)
   return setmetatable(entity, Player_mt)
 end
 
@@ -251,32 +262,38 @@ function Player.move(self, dir_x, dir_y)
   end
 end
 
+
 function Player.action1(self)
   if self.rate_limited then 
     self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
     return 
   end
   if self.mp >= MP_COST and not self.rate_limited then
-    Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.velocity_dir * 500})
+    addEntity(Fireball(self.center.x, self.center.y, self.velocity_dir.x * 500, self.velocity_dir.y * 500, 16, 16, 0, 0, 1, _sfimage, _sfquad))
     self.mp = self.mp - MP_COST
   end
   self.charge_handle = Timer.after(CHARGE_TIME, function() self.charged = true end)
+  self.ps_handle = Timer.after(0.2, function() self.ps:start() end)
   self.rate_limited = true
   Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
 end
+
 
 function Player.action2(self)
   if self.charged then
     if self.mp >= MP_COST * 2 then
       local velocity = self.velocity_dir:is_zero() and self.Transform.forward or self.Velocity:normalize()
-      Entity.add('projectiles/fireball', {position = self.center:clone(), velocity = self.velocity_dir * 500, damage = 4, radius = 12})
+      addEntity(Fireball(self.center.x, self.center.y, self.velocity_dir.x * 500, self.velocity_dir.y * 500, 32, 32, 0, 0, 3, _bfimage, _bfquad))
       self.mp = self.mp - MP_COST * 2
       self.rate_limited = true
+      self.ps_handle = nil
+      self.ps.ps:stop()
       Timer.after(RATE_OF_FIRE, function() self.rate_limited = false end)
     end
     self.charged = false
   end
   if self.charge_handle then Timer.cancel(self.charge_handle) end
+  if self.ps_handle then Timer.cancel(self.ps_handle) end
 end
 
 

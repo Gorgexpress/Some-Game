@@ -17,6 +17,7 @@ local function filterOnSpawn(other)
 end
 
 local function isPlayerColliding(self)
+  --Not making each edge of the rectangle larger by 1 will lead to floating point errors
   local _, len = Game.physics.queryRect(self.Transform.position.x - 1, self.Transform.position.y - 1, self.Body.size.x + 1, self.Body.size.y + 1, filterOnSpawn)
   return len ~= 0 
 end

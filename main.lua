@@ -26,10 +26,7 @@ function love.load()
   g_player = player
   Game.player = player
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
-  loadMap('103')
-  --Entity.add('enemies/bump', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y + 400)})
-  --Entity.add('enemies/ranged', {position = Vec2(map.layers.Sprite.objects[1].x + 500, map.layers.Sprite.objects[1].y)})
-  --Entity.add('enemies/bosses/boss1', {position = Vec2(map.layers.Sprite.objects[1].x, map.layers.Sprite.objects[1].y - 250)})
+  loadMap('101')
   love.graphics.setDefaultFilter("nearest","nearest")
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
 end
@@ -48,7 +45,10 @@ function loadMap(level, id)
       player.Transform.position = Vec2(v.x, v.y)
     end
   end
+  --readd player to the entity system. The player's child entities need to be readded too.
   addEntity(player)
+  addEntity(player.ps)
+  --triggers need to be added last. They check if an entity has spawned on top of them, so they can deactive until the entity moves off.
   for k, v in ipairs(map.layers.Sprite.objects) do
     if v.properties.exitmap then
       addEntity('triggers/exit', {position = Vec2(v.x, v.y), size = Vec2(v.width, v.height), exitmap = v.properties.exitmap, exitid = v.properties.exitid})

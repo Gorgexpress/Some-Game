@@ -72,7 +72,13 @@ end
 local _basicimage = Asset.getImage('graphics/projectiles/bullet2')
 local _basicquad = love.graphics.newQuad(32, 0, 16, 16, _basicimage:getDimensions())
 function _defs.basic(x, y, vx, vy)
-  addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, _basicimage, _basicquad))
+  addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, 10, _basicimage, _basicquad))
+end
+
+local _bpurpleimage = Asset.getImage('graphics/projectiles/bigpurple')
+local _bpurplequad = love.graphics.newQuad(64, 0, 32, 32, _basicimage:getDimensions())
+function _defs.bigpurple(x, y, vx, vy)
+  addEntity(Bullet.new(x, y, vx, vy, 6, 6, 12, 12, 10, _bbpurpleimage, _bpurplequad))
 end
 
 local _abimage = Asset.getImage('graphics/projectiles/bullet2')

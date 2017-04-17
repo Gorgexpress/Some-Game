@@ -1,4 +1,5 @@
 local Vec2 = require 'lib/vec2'
+local centerEntity = require('lib/utility').centerEntity
 
 local Entity = {}
 local Entity_mt = {}
@@ -13,11 +14,7 @@ function Entity.onCollision(self, other, type)
 end
 
 function Entity.draw(self)
-  --TODO refractor all code related to drawing so that the get color is not needed
-  local r, g, b, a = love.graphics.getColor()
-  love.graphics.setColor(226, 88, 34)
-  love.graphics.circle('fill', self.Transform.position.x, self.Transform.position.y, self.radius)  
-  love.graphics.setColor(r, g, b, a) 
+  love.graphics.draw(self.image, self.quad, self.Transform.position:unpack())
 end
 
 local function filter(self, other)
@@ -31,33 +28,29 @@ function Entity.update(self, dt)
   
 end
 
-function Entity.new(args) 
-  local radius = args.radius or 6
-  local diameter = 2 * radius
-  local transform = args.transform or {
-      position = args.position or Vec2(0, 0),
-      forward = Vec2(0, -1),
-  }
-  local body = {
-      size = Vec2(diameter, diameter),
-      offset = Vec2(-radius, -radius),
-      filter = args.filter or filter,
-      type = args.type or 'p_projectile',
-      damage = args.damage or 1,
-  }
-  local entity = {
-    Transform = transform,
-    Body = body,
-    Velocity = args.velocity or Vec2(0, 0),
-    radius = radius
-  }
-  return setmetatable(entity, Entity_mt)
+function Entity.new(x, y, vx, vy, w, h, ox, oy, damage, image, quad) 
+  x, y = centerEntity(x, y, w, h, ox, oy)
+  return setmetatable( {
+    Transform =  {
+      position = Vec2(x, y),
+    },
+    Body = {
+      size = Vec2(w, h),
+      offset = Vec2(ox, oy),
+      filter = filter,
+      type = 'p_projectile',
+      damage = damage,
+    },
+    Velocity = Vec2(vx, vy),
+    image = image,
+    quad = quad, 
+  }, Entity_mt)
 end
 
 Entity_mt.__index = Entity
 
-function Entity_mt.__call(_, args)
-  return Entity.new(args)
+function Entity_mt.__call(_, x, y, vx, vy, w, h, ox, oy, damage, image, quad)
+  return Entity.new(x, y, vx, vy, w, h, ox, oy, damage, image, quad)
 end
 
 return setmetatable({}, Entity_mt)
