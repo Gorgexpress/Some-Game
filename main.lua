@@ -10,6 +10,7 @@ local Game = require 'src/game'
 local Player = require 'src/entities/player'
 local ProFi = require 'lib/profi'
 local addEntity = Entity.add
+
 local debug = false
 local pause = false
 
@@ -59,24 +60,27 @@ function loadMap(level, id)
   camera:setScale(scale)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y)
 end
+
+Game.loadMap = loadMap
     
 local code =  [[
 extern vec3 iResolution;
 extern number iGlobalTime;
-
+extern vec2 offset;
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-	vec2 uv = fragCoord.xy / iResolution.xy;
+	  vec2 uv = fragCoord.xy / iResolution.xy;
     vec2 original = uv;
     vec2 old = uv;
-    number n = 5.0;
+    uv = fract(uv + offset);
+    number n = 6.0;
     number off = uv.y * n;
     uv = fract(uv * n);
     if (mod(off, 2.0) < 1.0) 
-    	uv.x = fract(uv.x - mod(iGlobalTime * 0.75, 10.0));
+    	uv.x = fract(uv.x - mod(iGlobalTime * 0.5, 10.0));
     else {
-        uv.x = fract(uv.x + mod(iGlobalTime * 0.75, 10.0));
+        uv.x = fract(uv.x + mod(iGlobalTime * 0.5, 10.0));
         old.x = 1.0 - old.x;
     }
     number scale = iResolution.x / iResolution.y;
@@ -84,12 +88,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     number height = resolution;
     number width = resolution * scale;
     vec2 dim = vec2(width, height) / n;
+    dim *= 1.2;
     vec2 center = dim * 0.5;
-    number radius = 0.45 * (resolution / n);
+    number radius = 0.475 * (resolution / n);
     if (distance(uv * dim, center) < radius)
-		fragColor = vec4(uv, sin(old.x),1.0);
+		    fragColor = vec4(uv, sin(old.x),1.0);
    	else
-        fragColor = vec4(original, 0.5 + sin(iGlobalTime)* 0.5, 0.0);
+        fragColor = vec4(0.0, 0.0, 0.0 + sin(iGlobalTime)* 0.1, 1.0);
 }
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 pixel_coords){
@@ -110,8 +115,7 @@ end
 local canvas = love.graphics.newCanvas(love.graphics.getDimensions())
 local function cameraDraw(l, t, w, h)
   map:setDrawRange(l, t, w, h)
-    love.graphics.draw(canvas,0,0)
-    map:draw()
+  map:draw()
   for _, entity in ipairs(Entity.entities) do
     entity:draw()
   end
@@ -119,13 +123,15 @@ local function cameraDraw(l, t, w, h)
 end
 
 function love.draw()
-  shader:send('iResolution', { love.graphics.getWidth(), love.graphics.getHeight(), 1 })
+ --[[shader:send('iResolution', { love.graphics.getWidth(), love.graphics.getHeight(), 1 })
   shader:send('iGlobalTime', Game.time)
+  local x, y = camera:getPosition()
+  shader:send('offset', {x / 3000, y / 3000})
   love.graphics.setShader(shader)
   love.graphics.draw(canvas)
   love.graphics.setShader()
   love.graphics.setCanvas()
-  love.graphics.draw(canvas,0,0)
+  love.graphics.draw(canvas,0,0)]]
   camera:setPosition(player.Transform.position.x, player.Transform.position.y) 
   camera:draw(cameraDraw)
   UI.draw(player)

@@ -24,7 +24,7 @@ end
 
 function Entity.onCollision(self, other, type)
   if other ~= Game.player or not self.active then return nil end
-  loadMap(self.exitmap, self.exitid)
+  Game.loadMap(self.exitmap, self.exitid)
   return true
 end
 
