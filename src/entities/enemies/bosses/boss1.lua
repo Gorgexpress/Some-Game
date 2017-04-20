@@ -39,7 +39,7 @@ end
 local function fire1(self)
   local center = self.Transform.position + self.Body.size * 0.5
   local dir = (self.target.center - center):normalize()
-  local n = math.random()
+  local n = love.math.random()
   if n > 0.3 or self.health >= 115 then
     rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6})
   else

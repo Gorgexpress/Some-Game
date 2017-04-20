@@ -90,10 +90,10 @@ function EntityManager.update(dt)
 end
 
 function EntityManager.setWorld(world)
-  _entities = {}
+  for i=1, _capacity do 
+    _entities[i] = nil
+  end
   _size = 0
-  _capacity = 0
-  EntityManager.entities = _entities
   PhysicsSystem.setWorld(world)
 end
 
@@ -111,9 +111,11 @@ end
 
 --does not clear physics
 function EntityManager.clear()
-  _entities = nil
+  for i=1, _capacity do 
+    _entities[i] = nil
+  end
   _size = 0
-  _capacity = 0
 end
 
+EntityManager.entities = _entities
 return EntityManager

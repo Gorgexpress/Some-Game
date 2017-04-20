@@ -1,7 +1,7 @@
 g_player = {}
 
-local sti = require "lib/sti"
-local gamera = require 'lib/gamera'
+local STI = require "lib/sti"
+local Gamera = require 'lib/gamera'
 local Entity = require 'src/managers/entity'
 local Timer = require 'lib/timer'
 local Vec2 = require 'lib/vec2'
@@ -9,6 +9,8 @@ local UI = require 'src/managers/ui'
 local Game = require 'src/game'
 local Player = require 'src/entities/player'
 local ProFi = require 'lib/profi'
+local Gamestate = require 'lib/gamestate'
+local InGameState = require 'src/gamestates/ingame'
 local addEntity = Entity.add
 
 local debug = false
@@ -22,46 +24,84 @@ local map
 local world = {}
 local camera
 
+
+--https://love2d.org/forums/viewtopic.php?f=4&t=3673&start=20#p99678
+function love.run()
+
+  love.math.setRandomSeed( os.time() )
+  
+  if love.load then love.load(arg) end
+
+  if love.timer then love.timer.step() end --ignore time taken by love.load
+  
+  local dt = 0
+  local accumulator = 0
+  
+  -- Main loop
+  while true do
+  
+    -- Process events.
+    if love.event then
+      love.event.pump()
+      for e,a,b,c,d in love.event.poll() do
+        if e == "quit" then
+          if not love.quit or not love.quit() then
+            if love.audio then love.audio.stop() end
+            return
+          end
+        end
+        love.handlers[e](a,b,c,d)
+      end
+    end
+        
+    -- Update dt for any uses during this timestep of love.timer.getDelta
+    if love.timer then 
+      love.timer.step()
+      dt = love.timer.getDelta()
+    end
+
+    --local fixedTimestep = 1/60
+    
+    if fixedTimestep then       
+      -- see http://gafferongames.com/game-physics/fix-your-timestep  
+      
+      if dt > 0.25 then      
+        dt = 0.25 -- note: max frame time to avoid spiral of death
+      end     
+      
+      accumulator = accumulator + dt
+      --_logger:debug("love.run - acc=%f fts=%f", accumulator, fixedTimestep) 
+
+      while accumulator >= fixedTimestep do
+        if love.update then love.update(fixedTimestep) end
+        accumulator = accumulator - fixedTimestep
+      end
+      
+    else
+      -- no fixed timestep in place, so just update
+      -- will pass 0 if love.timer is disabled
+      if love.update then love.update(dt) end 
+    end
+    
+    -- draw
+    if love.graphics then
+      love.graphics.clear()
+      if love.draw then love.draw() end
+      if love.timer then love.timer.sleep(0.001) end
+      love.graphics.present()
+    end 
+  end
+end
+
 function love.load()
-  player = Player({position = Vec2(500, 500)})
-  g_player = player
-  Game.player = player
-  scale = love.graphics.getHeight() / INTERNAL_HEIGHT
-  loadMap('101')
+  Game.INTERNAL_HEIGHT = 480
   love.graphics.setDefaultFilter("nearest","nearest")
   scale = love.graphics.getHeight() / INTERNAL_HEIGHT
+  Game.scale = scale
+  Gamestate.registerEvents()
+  Gamestate.switch(InGameState)
+  
 end
-
-function loadMap(level, id)
-  map = sti("assets/maps/"..level..".lua", {"bump"})
-  world.width = map.width * map.tilewidth
-  world.height = map.height * map.tileheight
-  Entity.setWorld(map)
-  --TODO make triggers a separate layer
-  for k, v in ipairs(map.layers.Sprite.objects) do
-    if v.properties.entity then
-      addEntity(v.properties.entity, {position = Vec2(v.x, v.y)})
-    end
-    if v.properties.entrance and v.properties.entrance == id then
-      player.Transform.position = Vec2(v.x, v.y)
-    end
-  end
-  --readd player to the entity system. The player's child entities need to be readded too.
-  addEntity(player)
-  addEntity(player.ps)
-  --triggers need to be added last. They check if an entity has spawned on top of them, so they can deactive until the entity moves off.
-  for k, v in ipairs(map.layers.Sprite.objects) do
-    if v.properties.exitmap then
-      addEntity('triggers/exit', {position = Vec2(v.x, v.y), size = Vec2(v.width, v.height), exitmap = v.properties.exitmap, exitid = v.properties.exitid})
-    end
-  end
-  map.layers.Sprite = nil
-  camera = gamera.new(0, 0, world.width, world.height)
-  camera:setScale(scale)
-  camera:setPosition(player.Transform.position.x, player.Transform.position.y)
-end
-
-Game.loadMap = loadMap
     
 local code =  [[
 extern vec3 iResolution;
@@ -103,130 +143,33 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 pixel_coords){
     return color;
 }]]
 
-Game.time = 0
-
-local shader = love.graphics.newShader(code)
-function love.update(dt)
-  Game.time = Game.time + dt
-  if pause then return end
-  Entity.update(dt)
-  Timer.update(dt)
-end
-local canvas = love.graphics.newCanvas(love.graphics.getDimensions())
-local function cameraDraw(l, t, w, h)
-  map:setDrawRange(l, t, w, h)
-  map:draw()
-  for _, entity in ipairs(Entity.entities) do
-    entity:draw()
+function Game.loadMap(level, id)
+  local player = Game.player
+  local map = STI("assets/maps/"..level..".lua", {"bump"})
+  Game.map = map
+  Entity.setWorld(map)
+  --TODO make triggers a separate layer
+  for k, v in ipairs(map.layers.Sprite.objects) do
+    if v.properties.entity then
+      addEntity(v.properties.entity, {position = Vec2(v.x, v.y)})
+    end
+    if v.properties.entrance and v.properties.entrance == id then
+      player.Transform.position = Vec2(v.x, v.y)
+    end
   end
-  if debug then Entity.drawCollision() end
-end
-
-function love.draw()
- --[[shader:send('iResolution', { love.graphics.getWidth(), love.graphics.getHeight(), 1 })
-  shader:send('iGlobalTime', Game.time)
-  local x, y = camera:getPosition()
-  shader:send('offset', {x / 3000, y / 3000})
-  love.graphics.setShader(shader)
-  love.graphics.draw(canvas)
-  love.graphics.setShader()
-  love.graphics.setCanvas()
-  love.graphics.draw(canvas,0,0)]]
-  camera:setPosition(player.Transform.position.x, player.Transform.position.y) 
-  camera:draw(cameraDraw)
-  UI.draw(player)
-  love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
-end
-
-
---input--
-
-local input_state = {
-  ['up'] = false,
-  ['left'] = false,
-  ['down'] = false,
-  ['right'] = false,
-  ['combo'] = false,
-}
-  
-local actions = {
-  ["up"] = function() movement() end,
-  ["left"] = function() movement() end,
-  ["down"] = function() movement() end,
-  ["right"] = function() movement() end,
-  ['combo'] = function() player:action1() end,
-  ['combo2'] = function() player:action2() end,
-  ["debug"] = function() debug = not debug end,
-  ["pause"] = function() pause = not pause end,
-}
-
-function movement()
-  local uvx, uvy = 0, 0
-
-  if input_state['up'] then uvy = uvy -1 end
-  if input_state['right'] then uvx = uvx + 1 end 
-  if input_state['down'] then uvy = uvy + 1 end
-  if input_state['left'] then uvx = uvx - 1 end
-  player:move(uvx, uvy)
-end
-
-
-function love.keypressed(key)
-  local action = ''
-  if key == "w" then action = 'up'
-  elseif key == 's' then action = 'down'
-  elseif key == 'a' then action = 'left'
-  elseif key == 'd' then action = 'right'
-  elseif key == 'space' then action = 'combo'
-  elseif key == 'n' then action = 'debug'
-  elseif key == 'p' then action = 'pause'
+  --readd player to the entity system. The player's child entities need to be readded too.
+  addEntity(player)
+  addEntity(player.ps)
+  --triggers need to be added last. They check if an entity has spawned on top of them, so they can deactive until the entity moves off.
+  for k, v in ipairs(map.layers.Sprite.objects) do
+    if v.properties.exitmap then
+      addEntity('triggers/exit', {position = Vec2(v.x, v.y), size = Vec2(v.width, v.height), exitmap = v.properties.exitmap, exitid = v.properties.exitid})
+    end
   end
-  if actions[action] then
-    input_state[action] = not input_state[action]
-    actions[action]()
-  end
-end
-
-function love.keyreleased(key)
-  local action = ''
-  if key == "w" then action = 'up'
-  elseif key == 's' then action = 'down'
-  elseif key == 'a' then action = 'left'
-  elseif key == 'd' then action = 'right'
-  elseif key == 'space' then action = 'combo2'
-  end
-  if actions[action] then
-    input_state[action] = not input_state[action]
-    actions[action]()
-  end
-end
-
-function love.gamepadpressed(joystick, button)
-  local action = ''
-  if button == "dpup" then action = 'up'
-  elseif button == 'dpdown' then action = 'down'
-  elseif button == 'dpright' then action = 'right'
-  elseif button == 'dpleft' then action = 'left'
-  elseif button == 'a' then action = 'combo'
-  elseif button == 'back' then action = 'debug'
-  elseif button == 'start' then action = 'pause'
-  end
-  if actions[action] then
-    input_state[action] = not input_state[action]
-    actions[action]()
-  end
-end
-
-function love.gamepadreleased(joystick, button)
-  local action = ''
-  if button == "dpup" then action = 'up'
-  elseif button == 'dpdown' then action = 'down'
-  elseif button == 'dpright' then action = 'right'
-  elseif button == 'dpleft' then action = 'left'
-  elseif button == 'a' then action = 'combo2'
-  end
-  if actions[action] then
-    input_state[action] = not input_state[action]
-    actions[action]()
-  end
+  map.layers.Sprite = nil
+  local camera = Gamera.new(0, 0, map.width * map.tilewidth, map.height * map.tileheight)
+  camera:setScale(Game.scale)
+  camera:setPosition(player.Transform.position.x, player.Transform.position.y)
+  Game.camera = camera
+  return map, camera
 end

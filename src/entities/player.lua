@@ -221,7 +221,7 @@ function Player.update(self, dt)
     self.stunned_timer = max(self.stunned_timer - dt, 0)
     if self.stunned_timer == 0 then 
       self.state = 'idle'
-      movement() 
+      self:move() 
     end
   end
   if self.is_invincible then
@@ -234,24 +234,30 @@ function Player.update(self, dt)
   end
 end
 
-function Player.move(self, dir_x, dir_y)
+function Player.move(self)
+  local uvx, uvy = 0, 0
+
+  if Game.input_state['up'] then uvy = uvy -1 end
+  if Game.input_state['right'] then uvx = uvx + 1 end 
+  if Game.input_state['down'] then uvy = uvy + 1 end
+  if Game.input_state['left'] then uvx = uvx - 1 end
   if self.state == 'idle' or self.state == 'running' then
-    if dir_x == 0 and dir_y == 0 then 
+    if uvx == 0 and uvy == 0 then 
       self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
       self.state = 'idle'
       self.Velocity = Vec2(0, 0)
       self.time_running = 0
     else 
-      if dir_x == 0 or dir_y == 0 then
-        self.velocity_dir = Vec2(dir_x, dir_y)
-        self.Transform.forward.x, self.Transform.forward.y = dir_x, dir_y
+      if uvx == 0 or uvy == 0 then
+        self.velocity_dir = Vec2(uvx, uvy)
+        self.Transform.forward.x, self.Transform.forward.y = uvx, uvy
         if self.time_running == self.seconds_to_max_speed then
-          self.Velocity = Vec2(self.speed * dir_x, self.speed * dir_y)
+          self.Velocity = Vec2(self.speed * uvx, self.speed * uvy)
         end
       else
-        self.velocity_dir = Vec2(SIN45 * dir_x, SIN45 * dir_y)
+        self.velocity_dir = Vec2(SIN45 * uvx, SIN45 * uvy)
         if self.time_running == self.seconds_to_max_speed then
-          self.Velocity = Vec2(SIN45 * self.speed * dir_x, SIN45 * self.speed * dir_y)
+          self.Velocity = Vec2(SIN45 * self.speed * uvx, SIN45 * self.speed * uvy)
         end
       end
       self.animator.current = self.animator.animations['running_' .. vecToDir(self.Transform.forward)]
