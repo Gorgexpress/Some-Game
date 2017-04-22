@@ -8,7 +8,7 @@ return {
   height = 20,
   tilewidth = 32,
   tileheight = 32,
-  nextobjectid = 9,
+  nextobjectid = 8,
   properties = {},
   tilesets = {
     {
@@ -59,7 +59,7 @@ return {
       properties = {},
       encoding = "base64",
       compression = "zlib",
-      data = "eJxjYWBgYCICM0IxPjUsUMxIJTxq3qh5A20etcyiFR7s4Tdq3uAyj5iynhQMAKXGAhs="
+      data = "eJxjYWBgYKISZoFiRirhUfNGzRto86hlFq3MG+zhN2re4DKPWmU9DAMAwfoCIw=="
     },
     {
       type = "objectgroup",
@@ -84,7 +84,7 @@ return {
           visible = true,
           properties = {
             ["exitid"] = "east",
-            ["exitmap"] = "102"
+            ["exitmap"] = "101"
           }
         },
         {
@@ -103,65 +103,18 @@ return {
           }
         },
         {
-          id = 3,
-          name = "",
-          type = "",
-          shape = "rectangle",
-          x = 320,
-          y = 0,
-          width = 64,
-          height = 32,
-          rotation = 0,
-          visible = true,
-          properties = {
-            ["entrance"] = "north"
-          }
-        },
-        {
-          id = 4,
-          name = "",
-          type = "",
-          shape = "rectangle",
-          x = 320,
-          y = -32,
-          width = 64,
-          height = 32,
-          rotation = 0,
-          visible = true,
-          properties = {
-            ["exitid"] = "south",
-            ["exitmap"] = "103"
-          }
-        },
-        {
           id = 6,
           name = "",
           type = "",
           shape = "rectangle",
-          x = 640,
-          y = 320,
+          x = 320,
+          y = 192,
           width = 32,
-          height = 64,
+          height = 32,
           rotation = 0,
           visible = true,
           properties = {
-            ["exitid"] = "west",
-            ["exitmap"] = "104"
-          }
-        },
-        {
-          id = 7,
-          name = "",
-          type = "",
-          shape = "rectangle",
-          x = 608,
-          y = 320,
-          width = 32,
-          height = 64,
-          rotation = 0,
-          visible = true,
-          properties = {
-            ["entrance"] = "east"
+            ["entity"] = "enemies/ranged"
           }
         }
       }

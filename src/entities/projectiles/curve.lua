@@ -28,7 +28,12 @@ local function bbox(self)
 end
 
 function Entity.onCollision(self, other, type)
-  if other == self.target then self.state = 5 end
+  if other == self.target then 
+    for k, v in pairs(self.children) do
+      v.destroyed = true
+    end
+    self.destroyed = true
+  end
 end
 
 
@@ -57,23 +62,24 @@ function Entity.update(self, dt)
       self.state = 1
       self.Timer:script(function(wait)
         self.Timer:tween(self.slow_time, self, {speed = self.min_speed}, 'linear')
-        wait(0.2)
+        wait(self.slow_time * 0.5)
         self.Timer:tween(self.slow_time, self.mid, {speed = self.min_speed}, 'linear')
-        wait(0.2)
+        wait(self.slow_time * 0.5)
         self.Timer:tween(self.slow_time, self.endp, {speed = self.min_speed}, 'linear')
-        wait(self.wait - 0.4)
-        self.state = 2
+        wait(self.delay)
+
+        if  self.state ~= 6 then self.state = 2 end
         self.Timer:tween(self.speedup_time, self, {speed = self.max_speed}, 'quad')
-        wait(0.15)
+        wait(self.speedup_time * 0.5)
         self.Timer:tween(self.speedup_time, self.mid, {speed = self.max_speed}, 'quad')
-        wait(0.15)
+        wait(self.speedup_time * 0.5)
         self.Timer:tween(self.speedup_time, self.endp, {speed = self.max_speed}, 'quad')
-        wait(0.75 - 0.3)
-        self.state = 4
-        wait(1)
-        self.state = 5
-        wait(4)
-        self.state = 6
+        self.state = 3
+
+        --wait(0.5)
+        --self.state = 5
+        --wait(4)
+        --self.state = 6
       end) 
     end
   elseif self.state == 1 then
@@ -81,24 +87,23 @@ function Entity.update(self, dt)
     local dirx, diry = Vec2(dx, dy):normalize():unpack()
     self.Transform.forward.x , self.Transform.forward.y = dirx, diry
     self.Velocity.x , self.Velocity.y = dirx * self.speed , diry * self.speed
-  elseif self.state == 2 then
-    --[[
-    local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
-    local dirx, diry = Vec2(dx, dy):normalize():unpack()
-    local forward = self.Transform.forward
-    local current_angle = forward:to_polar()
-    local target_angle = Vec2(dirx, diry)
-    local diff = forward:angle_between(target_angle)
-    local rate = math.min((self.rotation_speed * dt) / diff, 1)
-    self.Transform.forward = self.Transform.forward:lerp(target_angle, rate)]]
+  elseif self.state == 2 or self.state == 3 then
     local desired = atan2(self.target.center.y - position.y, self.target.center.x - position.x)
     local current = atan2(self.Transform.forward.y, self.Transform.forward.x)
     local diff = desired - current
     if math.abs(diff) > math.pi then diff = -(diff - math.pi) end
     local rate = math.max(-self.rotation_speed * dt, math.min(self.rotation_speed * dt, diff))
     self.Transform.forward = self.Transform.forward:rotate(rate)
-    self.last_rate = rate
     self.Velocity.x , self.Velocity.y = self.Transform.forward.x * self.speed, self.Transform.forward.y * self.speed
+    if self.state == 3 then
+      local dx, dy = self.target.center.x - position.x, self.target.center.y - position.y
+      if dx*dx + dy*dy < 2000 then 
+        self.state = 4
+        self.last_rate = rate
+        self.Timer:after(1, function() self.state = 5 end)
+        self.Timer:after(3, function() self.state = 6 end)
+      end
+    end
   elseif self.state == 4 then
     if self.last_rate then self.Transform.forward = self.Transform.forward:rotate(self.last_rate / 2) end
     self.Velocity.x , self.Velocity.y = self.Transform.forward.x * self.speed, self.Transform.forward.y * self.speed
@@ -143,7 +148,8 @@ function Entity.new(args)
   entity.curve = love.math.newBezierCurve(x, y, x, y, x, y)
   entity.target = args.target or g_player
   if args.dist then entity.dist2 = args.dist * args.dist2 else entity.dist2 = 150*150  end
-  entity.wait = args.wait or 1
+  entity.delay = args.delay or 1
+  entity.wait = args.wait or 0.5
   entity.timer = 0
   entity.state = 0
   entity.min_speed = args.min_speed or 40
@@ -200,8 +206,8 @@ function Entity.new(args)
   entity.children = {mid, endp}
   EntityManager.add(mid)
   EntityManager.add(endp)
-  entity.Timer:after(0.25, function() mid.Velocity = Vec2(0, 0) end)
-  entity.Timer:after(0.5, function() endp.Velocity = Vec2(0, 0) end)
+  entity.Timer:after(entity.wait * 0.5, function() mid.Velocity = Vec2(0, 0) end)
+  entity.Timer:after(entity.wait, function() endp.Velocity = Vec2(0, 0) end)
   entity.mid = mid
   entity.endp = endp
   return setmetatable(entity, Entity_mt)
