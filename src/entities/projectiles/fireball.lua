@@ -1,6 +1,7 @@
 local Vec2 = require 'lib/vec2'
 local centerEntity = require('lib/utility').centerEntity
 
+
 local Entity = {}
 local Entity_mt = {}
 

@@ -115,7 +115,7 @@ return {
           rotation = 0,
           visible = true,
           properties = {
-            ["entity"] = "enemies/bump"
+            ["entity"] = "bomber"
           }
         }
       }

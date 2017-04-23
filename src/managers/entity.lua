@@ -2,26 +2,24 @@ local PhysicsSystem = require 'src/systems/physics'
 local VelocitySystem = require 'src/systems/velocity'
 local ChildSystem = require 'src/systems/child'
 local Signal = require 'lib/signal'
-local FileSystem = love.filesystem
 local ENTITIES_PATH = 'src/entities/'
+local _ff = require('lib/FileFinder').new(5, ENTITIES_PATH, {'lua'})
 local EntityManager = {}
 local _entities = {}
 local _size = 0
 local _capacity = 0
 
 
-function EntityManager.add(entity, args, properties)
+
+
+function EntityManager.add(entity, ...)
   if type(entity) == 'string' then
     local path = ENTITIES_PATH .. entity
     --if file not found in given path, search for it recursively in all directories in the entities folder
-    if not FileSystem.exists(path..'.lua') then 
-      path = EntityManager.findEntity(ENTITIES_PATH, entity, 0)
-      if not path then
-        return print("Could not find Entity "..entity)
-      end
-    end
+    path = _ff:find(entity)
+    if not path then return nil end
     local class = require(path)
-    entity = class.new(args, properties)
+    entity = class.new(...)
   end
   _size = _size + 1
   if _size >  _capacity then _capacity = _size end 
@@ -30,26 +28,6 @@ function EntityManager.add(entity, args, properties)
   return entity
 end
 
---Recursively search for entity in subdirectories. Return path to entity(minus the .lua) if it is found
---Otherwise, return nil. 
---Quits and return nil if subdirectory depth is greater than 4 relative to the original folder
-function EntityManager.findEntity(path, entity, depth) 
-  if FileSystem.exists(path..entity..'.lua') then
-    return path..(entity:gsub('.lua', ''))
-  end
-  if depth > 4 then return nil end
-  local file_table = FileSystem.getDirectoryItems(path)
-  for i, v in ipairs(file_table) do
-    local file = path .. v
-    if FileSystem.isDirectory(file) then
-      local path_of_entity = EntityManager.findEntity(path..v..'/', entity)
-      if path_of_entity then 
-        return path_of_entity
-      end
-    end
-  end
-  return nil
-end
 
 --[[TODO? I didn't think of this at first but I can just store entities in a table 
 mapping the table reference to the table itself. Use pairs() to iterate, delete by

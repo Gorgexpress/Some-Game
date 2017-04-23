@@ -151,7 +151,7 @@ function Game.loadMap(level, id)
   --TODO make triggers a separate layer
   for k, v in ipairs(map.layers.Sprite.objects) do
     if v.properties.entity then
-      addEntity(v.properties.entity, {position = Vec2(v.x, v.y)})
+      addEntity(v.properties.entity, v.x, v.y)
     end
     if v.properties.entrance and v.properties.entrance == id then
       player.Transform.position = Vec2(v.x, v.y)
@@ -172,4 +172,8 @@ function Game.loadMap(level, id)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y)
   Game.camera = camera
   return map, camera
+end
+
+--doing this in Game.lua can lead to circular require issues. Not a problem here since nothing is going to require this file.
+local function initGameTable()
 end

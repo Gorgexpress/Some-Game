@@ -47,6 +47,8 @@ function Utility.bbox(v)
 	end
   return ulx, uly, lrx - ulx, lry - uly
 end
+
+--[[
 --TODO clean up and refractor hard coded situations
 function Utility.bezierToMesh(curve, width)
   width = width / 2
@@ -91,6 +93,49 @@ function Utility.bezierToMesh(curve, width)
     end
   end
 
+  return trilist
+end]]
+
+function Utility.bezierToMesh(curve, width, resolution)
+  local step = resolution == nil and 0.2 or (1 / resolution) --1 / step == resolution == how many points on curve to sample for vertices
+  width = width / 2
+  local x, y = curve:getControlPoint(1)
+  local derivative = curve:getDerivative()
+  --derivative:evaluate(t) is the change in direction at curve:evaluate(t)
+  --we follow the direction of the vector perpendicular to derivative:evaluate(t) to give the curve thickness
+  local d = Vec2(derivative:evaluate(0)):normalize():perpendicular()
+  local trilist = {}
+  --first quad. We want the first and last quad to have different uvs so they are done out of the loop.
+  trilist[1] = {x + d.x * width, y + d.y * width, 0, 0}
+  trilist[2] = {x - d.x * width, y - d.y * width, 0, 1}
+  x, y = curve:evaluate(step)
+  d = Vec2(derivative:evaluate(0.1)):normalize():perpendicular()
+  trilist[3] = {x + d.x * width, y + d.y * width, 0.25, 0}
+  trilist[4] = {x - d.x * width, y - d.y * width, 0.25, 1}
+  local flag = true --uvs are different for every other loop
+  --get the bulk of the vertices. 
+  for t=step, 1 - step, step do
+    x, y = curve:evaluate(t)
+    d = Vec2(derivative:evaluate(t)):normalize():perpendicular()
+    --only differences between the 2 branches are uvs
+    if flag then 
+      trilist[#trilist + 1] = {x + d.x * width, y + d.y * width, 0.75, 0}
+      trilist[#trilist + 1] = {x - d.x * width, y - d.y * width, 0.75, 1}
+    else 
+      trilist[#trilist + 1] = {x + d.x * width, y + d.y * width, 0.5, 0}
+      trilist[#trilist + 1] = {x - d.x * width, y - d.y * width, 0.5, 1}
+    end
+    flag = not flag
+  end
+  --last quad. Again, we want different uvs for the endpoints. uvs are reversed compared to the first quad
+  x, y = curve:evaluate(1 - step)
+  d = Vec2(derivative:evaluate(0.9)):normalize():perpendicular()
+  trilist[#trilist + 1] = {x + d.x * width, y + d.y * width, 0.25, 0}
+  trilist[#trilist + 1] = {x - d.x * width, y - d.y * width, 0.25, 1}
+  x, y = curve:evaluate(1)
+  d = Vec2(derivative:evaluate(1)):normalize():perpendicular()
+  trilist[#trilist + 1] = {x + d.x * width, y + d.y * width, 0, 0}
+  trilist[#trilist + 1] = {x - d.x * width, y - d.y * width, 0, 1}
   return trilist
 end
 

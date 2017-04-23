@@ -3,6 +3,7 @@ local THINK_TIME = 0.25
 local fire = require('src/projectile-spawner').fireAtPlayerFromCenter
 local EntityManager = require 'src/managers/entity'
 local Utility = require 'lib/utility'
+local Game = require 'src/game'
 local round = Utility.round
 local floor, abs = math.floor, math.abs
 local Entity = {}
@@ -31,7 +32,7 @@ function Entity.think(self)
     if dist2 < self.aggro_range2 then
       self.attacking = true
       self.think_timer = self.attack_timer
-      --facePlayer(self, dx, dy)
+      facePlayer(self, dx, dy)
     end
   else
     if dist2 > DEAGGRO_RANGE2 then
@@ -42,7 +43,7 @@ function Entity.think(self)
       --EntityManager.add('projectiles/rect-laser', {position = position, iterations = 1})
     end
     self.think_timer = self.attack_timer
-    --facePlayer(self, dx, dy)
+    facePlayer(self, dx, dy)
   end
 end
 
@@ -93,9 +94,9 @@ function Entity.update(self, dt)
   end
 end
 
-function Entity.new(args) 
+function Entity.new(x, y) 
   local transform =  {
-    position = args.position or Vec2(0, 0),
+    position = Vec2(x, y),
     forward = Vec2(0, -1),
   }
   local body = {
@@ -108,21 +109,21 @@ function Entity.new(args)
       damage = 1,
     }
   }
-  local aggro_range = args.aggro_range or DEFAULT_AGGRO_RANGE
-  local seal_range = args.seal_range or 60
+  local aggro_range =  DEFAULT_AGGRO_RANGE
+  local seal_range =  60
   local entity = {
     Transform = transform,
     Body = body,
-    Velocity = args.velocity or Vec2(0, 0),
+    Velocity = Vec2(0, 0),
     state = 'idle',
-    think_timer = args.think_timer or DEFAULT_THINK_TIMER, 
-    think_time = args.think_time or DEFAULT_THINK_TIMER,
-    attack_timer = args.attack_timer or DEFAULT_ATTACK_TIMER,
+    think_timer =  DEFAULT_THINK_TIMER, 
+    think_time = DEFAULT_THINK_TIMER,
+    attack_timer = DEFAULT_ATTACK_TIMER,
     attacking = false,
     health = 10,
     max_health = 10,
-    speed = args.speed or 50,
-    target = args.target or g_player,
+    speed = 50,
+    target = Game.player,
     aggro_range2 = aggro_range * aggro_range,
     seal_range2 = seal_range * seal_range,
     invincibility_to_bump_timer = 0
@@ -133,8 +134,8 @@ end
 
 Entity_mt.__index = Entity
 
-function Entity_mt.__call(_, args)
-    return Entity.new(args)
+function Entity_mt.__call(_, x, y)
+    return Entity.new(x, y)
 end
 
 return setmetatable({}, Entity_mt)

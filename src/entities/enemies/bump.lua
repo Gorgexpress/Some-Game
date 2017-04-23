@@ -1,5 +1,6 @@
 local Vec2 = require 'lib/vec2'
-local THINK_TIME = 0.25
+local Game = require 'src/game'
+local THINK_TIME = 0.5
 
 local Entity = {}
 local Entity_mt = {}
@@ -14,7 +15,7 @@ end
 
 function Entity.think(self)
   if self.state == 'hurt' or self.state =='melee' or self.state == 'stun' then return end
-  local dx, dy = self.Transform.position.x - g_player.center.x, self.Transform.position.y - g_player.center.y
+  local dx, dy = self.Transform.position.x - Game.player.center.x, self.Transform.position.y - Game.player.center.y
   if dx * dx + dy * dy < 700* 700 then
     if math.abs(dx) > math.abs(dy) then
       if dx <= 0 then
@@ -73,22 +74,22 @@ function Entity.update(self, dt)
   end
   self.think_timer = self.think_timer - dt
   if self.think_timer <= 0 then
-    self:think()
+    Entity.think(self)
     self.think_timer = THINK_TIME
   end
 end
 
-function Entity.new(args) 
-  local transform = args.transform or {
-    position = args.position or Vec2(0, 0),
+function Entity.new(x, y) 
+  local transform = {
+    position = Vec2(x, y),
     forward = Vec2(0, -1),
   }
-  local body = args.body or {
+  local body = {
     size = Vec2(32, 32),
     offset = Vec2(0, 0),
     filter = filter,
     type = 'bump',
-    damage = 1,
+    damage = 10,
     properties = {
       damage = 1,
     },
@@ -97,12 +98,12 @@ function Entity.new(args)
   local entity = {
     Transform = transform,
     Body = body,
-    Velocity = args.velocity or Vec2(0, 0),
+    Velocity = Vec2(0, 0),
     state = 'idle',
-    think_timer = 0.25,
+    think_timer = THINK_TIME,
     health = 50,
     max_health = 50,
-    speed = args.speed or 50,
+    speed = 75,
     invincibility_to_bump_timer = 0,
   }
   return setmetatable(entity, Entity_mt)
@@ -110,8 +111,8 @@ end
 
 Entity_mt.__index = Entity
 
-function Entity_mt.__call(_, args)
-    return Entity.new(args)
+function Entity_mt.__call(_, x, y)
+    return Entity.new(x, y)
 end
 
 return setmetatable({}, Entity_mt)

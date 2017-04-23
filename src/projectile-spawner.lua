@@ -3,7 +3,6 @@ local Vec2l = require 'lib/vector-light'
 local Game = require 'src/game'
 local Laser = require 'src/entities/projectiles/laser'
 local Bullet = require 'src/entities/projectiles/bullet'
-local defs = require 'src/entities/projectiles/definitions'
 local Asset = require 'src/managers/asset'
 local add, sub, mul, normalize = Vec2l.add, Vec2l.sub, Vec2l.mul, Vec2l.normalize
 local sqrt, random, rad = math.sqrt, math.random, math.rad
