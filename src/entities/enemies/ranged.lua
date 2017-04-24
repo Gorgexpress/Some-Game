@@ -68,6 +68,7 @@ function Entity.onCollision(self, other, type)
       self.state = 'bump'
       self.health = math.max(self.health - other.Body.damage or 0, 0)
       self.Velocity = other.Transform.forward:normalize() * 500
+      Game.playSound('fireballhit')
     end
   end
   if self.health <= 0 then self.destroyed = true end

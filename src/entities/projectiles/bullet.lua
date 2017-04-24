@@ -19,7 +19,7 @@ local shader = love.graphics.newShader[[
 local _use_shader = false
 Timer.every(0.2, function() _use_shader = not _use_shader end)
 
-local image = Asset.getImage('graphics/projectiles/bullet2')
+local image = Asset.getImage('bullet2')
 local quad = love.graphics.newQuad(32, 0, 16, 16, image:getDimensions())
 
 function Entity.onCollision(self, other, type)

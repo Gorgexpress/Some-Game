@@ -9,7 +9,7 @@ local abs, atan2, max, min = math.abs, math.atan2, math.max, math.min
 local Entity = {}
 local Entity_mt = {}
 
-local _image = AssetManager.getImage('graphics/projectiles/curve')
+local _image = AssetManager.getImage('curve')
 
 
 

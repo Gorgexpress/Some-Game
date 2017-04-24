@@ -8,6 +8,7 @@ local Vec2 = require 'lib/vec2'
 local UI = require 'src/managers/ui'
 local Game = require 'src/game'
 local Player = require 'src/entities/player'
+local SoundManager = require 'src/managers/sound'
 local ProFi = require 'lib/profi'
 local Gamestate = require 'lib/gamestate'
 local InGameState = require 'src/gamestates/ingame'
@@ -93,6 +94,12 @@ function love.run()
   end
 end
 
+--doing this in Game.lua can lead to circular require issues. Not a problem here since nothing is going to require this file.
+local function initGameTable()
+  Game.addEntity = Entity.add 
+  Game.playSound = SoundManager.playSound
+end
+
 function love.load()
   Game.INTERNAL_HEIGHT = 480
   love.graphics.setDefaultFilter("nearest","nearest")
@@ -100,6 +107,7 @@ function love.load()
   Game.scale = scale
   Gamestate.registerEvents()
   Gamestate.switch(InGameState)
+  initGameTable()
   
 end
     
@@ -174,6 +182,3 @@ function Game.loadMap(level, id)
   return map, camera
 end
 
---doing this in Game.lua can lead to circular require issues. Not a problem here since nothing is going to require this file.
-local function initGameTable()
-end

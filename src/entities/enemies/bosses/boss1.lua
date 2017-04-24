@@ -1,4 +1,5 @@
 local Vec2 = require 'lib/vec2'
+local Game = require 'src/game'
 local addEntity = require('src/managers/entity').add
 local Bullet = require 'src/entities/projectiles/bullet'
 local BigLaser = require 'src/entities/projectiles/big_laser'
@@ -149,12 +150,12 @@ function Entity.update(self, dt)
   end
 end
 
-function Entity.new(args) 
-  local transform = args.transform or {
-    position = args.position or Vec2(0, 0),
+function Entity.new(x, y) 
+  local transform = {
+    position = Vec2(x, y),
     forward = Vec2(0, -1),
   }
-  local body = args.body or {
+  local body = {
     size = Vec2(50, 50),
     offset = Vec2(0, 0),
     filter = filter,
@@ -165,13 +166,13 @@ function Entity.new(args)
   local entity = {
     Transform = transform,
     Body = body,
-    Velocity = args.velocity or Vec2(0, 0),
+    Velocity = Vec2(0, 0),
     state = 'idle',
     think_timer = 1,
     health = 125,
     max_health = 125,
     Timer = Timer.new(),
-    target = args.target or g_player,
+    target = Game.player,
     think_time = THINK_TIME,
     acceleration = 50,
     count = 3,
@@ -188,8 +189,8 @@ end
 
 Entity_mt.__index = Entity
 
-function Entity_mt.__call(_, args)
-    return Entity.new(args)
+function Entity_mt.__call(_, ...)
+    return Entity.new(...)
 end
 
 

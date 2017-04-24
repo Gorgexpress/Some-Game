@@ -50,9 +50,9 @@ local MP_REGEN_RATE = 50
 local MP_COST = 20
 
 --TODO? move all this stuff in a separate file
-local _sfimage = Asset.getImage('graphics/projectiles/smallfire')
+local _sfimage = Asset.getImage('smallfire')
 local _sfquad = love.graphics.newQuad(32, 0, 16, 16, _sfimage:getDimensions())
-local _bfimage = Asset.getImage('graphics/projectiles/bigfire')
+local _bfimage = Asset.getImage('bigfire')
 local _bfquad = love.graphics.newQuad(64, 0, 32, 32, _bfimage:getDimensions())
 local _particlequad = love.graphics.newQuad(48, 16, 16, 16, _sfimage:getDimensions())
 local _shader = love.graphics.newShader[[
@@ -88,11 +88,7 @@ function Player.new(args)
     offset = Vec2(8, 8),
     filter = playerFilter,
     type = 'player',
-    damage = 1,
-    properties = {
-      damage = 1,
-      knockback = 500,
-    },
+    damage = 10,
   }
   local animations = {
     idle_u = anim8.newAnimation(grid(2, 3), 1000),
@@ -160,12 +156,11 @@ function Player.onCollision(self, other, type)
   if type ~= 'tile' then
     if type == 'bumper' then
       self.time_running = 0
-      SoundManager.playSound('bump')
       --self.animator.current = self.animator.animations['idle_' .. vecToDir(self.Transform.forward)]
     elseif type == 'bumped' and state ~= 'knockbacked' and not self.is_invincible then
       --TODO? use tweening instead with some kind of interpolation that makes it seem 
       --like there is friction(entity slows down before stopping, instead of stopping suddenly)
-      SoundManager.playSound('hurt')
+      SoundManager.playSound('playerhurt')
       self.health = max(self.health - (other.Body.damage or 0), 0) 
       self.Velocity = other.Transform.forward * 250
       self.state = 'stunned'
@@ -195,6 +190,7 @@ function Player.onCollision(self, other, type)
       self.stunned_timer = STUN_TIME
       self.is_invincible = true
       self.invincibility_timer = INVINCIBILITY_TIME
+      SoundManager.playSound('playerhurt')
     end
   end
   if self.health <= 0 then

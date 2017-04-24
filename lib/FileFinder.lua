@@ -17,9 +17,9 @@ local function find(path, name, types, depth, maxdepth)
   for i=1, #types do
     if FileSystem.exists(path..name..'.'..types[i]) then
       if types[i] == 'lua' then
-        return path..(name:gsub('.lua', '')) --remove .lua affix. require statements don't allow them.
+        return path..name --remove .lua affix. require statements don't allow them.
       else
-        return path..name
+        return path..name..'.'..types[i]
       end
     end
   end

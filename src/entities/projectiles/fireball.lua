@@ -1,5 +1,6 @@
 local Vec2 = require 'lib/vec2'
 local centerEntity = require('lib/utility').centerEntity
+local Game = require 'src/game'
 
 
 local Entity = {}
@@ -10,6 +11,9 @@ function Entity.onCollision(self, other, type)
   if type then
     if type == 'bump' or type == 'tile' or type == 'boss' then
       self.destroyed = true
+    end
+    if type == 'bump' or type == 'boss' then
+      Game.playSound('fireballhit')
     end
   end
 end

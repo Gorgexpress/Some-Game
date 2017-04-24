@@ -11,7 +11,7 @@ local abs = math.abs
 local Entity = {}
 local Entity_mt = {}
 
-local _image = Asset.getImage('graphics/projectiles/bullet2')
+local _image = Asset.getImage('bullet2')
 local _quad = love.graphics.newQuad(16, 20, 16, 1, _image:getDimensions())
 local _quad2 = love.graphics.newQuad(48, 16, 16, 16, _image:getDimensions())
 

@@ -18,7 +18,7 @@ function ProjectileSpawner.fire(type, x, y, vx, vy, damage, update, properties)
   if _defs[type] then
     _defs[type](x, y, vx, vy, damage, update, properties)
   else
-    addEntity('projectiles/'..type, {position = position:clone(), velocity = velocity:clone()}, properties)
+    addEntity(type, {position = position:clone(), velocity = velocity:clone()}, properties)
   end
 end
 --[[
@@ -68,19 +68,19 @@ function _defs.basiclaser(x, y, vx, vy)
   addEntity(Laser{position = Vec2(x, y), velocity = Vec2(vx, vy), iterations = 1})
 end
 
-local _basicimage = Asset.getImage('graphics/projectiles/bullet2')
+local _basicimage = Asset.getImage('bullet2')
 local _basicquad = love.graphics.newQuad(32, 0, 16, 16, _basicimage:getDimensions())
 function _defs.basic(x, y, vx, vy)
   addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, 10, _basicimage, _basicquad))
 end
 
-local _bpurpleimage = Asset.getImage('graphics/projectiles/bigpurple')
+local _bpurpleimage = Asset.getImage('bigpurple')
 local _bpurplequad = love.graphics.newQuad(64, 0, 32, 32, _basicimage:getDimensions())
 function _defs.bigpurple(x, y, vx, vy)
   addEntity(Bullet.new(x, y, vx, vy, 6, 6, 12, 12, 10, _bbpurpleimage, _bpurplequad))
 end
 
-local _abimage = Asset.getImage('graphics/projectiles/bullet2')
+local _abimage = Asset.getImage('bullet2')
 local _abquad = love.graphics.newQuad(32, 32, 16, 16, _abimage:getWidth(), _abimage:getHeight())
 function _defs.angledbullet(x, y, vx, vy, damage, update, properties)
   addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, damage, _abimage, _abquad, 'true', update, properties))

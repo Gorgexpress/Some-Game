@@ -1,0 +1,2 @@
+playerhurt = 350926__cabled-mess__hurt-c-07
+fireballhit = 146730__fins__shoot

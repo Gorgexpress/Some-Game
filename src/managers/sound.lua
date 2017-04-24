@@ -6,7 +6,10 @@ function SoundManager.play(name)
 end
 
 function SoundManager.playSound(name)
-  Assets.getSound(name):play()
+  local sound = Assets.getSound(name)
+  if sound:isPlaying() then sound:rewind()
+  else sound:play()
+  end
 end
 
 return SoundManager
