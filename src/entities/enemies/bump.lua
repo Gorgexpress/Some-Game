@@ -61,7 +61,10 @@ function Entity.onCollision(self, other, type)
       Game.playSound('fireballhit')
     end
   end
-  if self.health <= 0 then self.destroyed = true end
+  if self.health <= 0 then 
+    self.destroyed = true
+    Game.Signal.emit('enemy-destroyed', self)
+  end
 end
 
 function Entity.draw(self)
@@ -80,7 +83,7 @@ function Entity.update(self, dt)
   end
 end
 
-function Entity.new(x, y) 
+function Entity.new(x, y, properties) 
   local transform = {
     position = Vec2(x, y),
     forward = Vec2(0, -1),
@@ -112,8 +115,8 @@ end
 
 Entity_mt.__index = Entity
 
-function Entity_mt.__call(_, x, y)
-    return Entity.new(x, y)
+function Entity_mt.__call(_, x, y, properties)
+    return Entity.new(x, y, properties)
 end
 
 return setmetatable({}, Entity_mt)

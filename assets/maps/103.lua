@@ -8,7 +8,7 @@ return {
   height = 20,
   tilewidth = 32,
   tileheight = 32,
-  nextobjectid = 12,
+  nextobjectid = 13,
   properties = {},
   tilesets = {
     {
@@ -59,12 +59,12 @@ return {
       properties = {},
       encoding = "base64",
       compression = "zlib",
-      data = "eJxjYWBgYKISZoFiRirhUfNGzRs1b9S8UfOoZx4x5ThMPTFqAdN2Aic="
+      data = "eJxjYWBgYBlhmIlKGGYeI5XwqHmj5o2aN2oeLc0jplyDqSdGLQBspgLJ"
     },
     {
       type = "objectgroup",
       name = "Sprite",
-      visible = false,
+      visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
@@ -108,13 +108,31 @@ return {
           type = "",
           shape = "rectangle",
           x = 320,
-          y = 128,
+          y = 192,
           width = 0,
           height = 0,
           rotation = 0,
           visible = true,
           properties = {
             ["entity"] = "enemies/bosses/boss1"
+          }
+        },
+        {
+          id = 12,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 288,
+          y = 608,
+          width = 64,
+          height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {
+            ["count"] = 1,
+            ["entity"] = "door",
+            ["height"] = 32,
+            ["width"] = 64
           }
         }
       }

@@ -5,6 +5,7 @@ local Gamera = require 'lib/gamera'
 local Entity = require 'src/managers/entity'
 local Timer = require 'lib/timer'
 local Vec2 = require 'lib/vec2'
+local Signal = require 'lib/signal'
 local UI = require 'src/managers/ui'
 local Game = require 'src/game'
 local Player = require 'src/entities/player'
@@ -98,6 +99,7 @@ end
 local function initGameTable()
   Game.addEntity = Entity.add 
   Game.playSound = SoundManager.playSound
+  Game.Signal = Signal
 end
 
 function love.load()
@@ -159,7 +161,7 @@ function Game.loadMap(level, id)
   --TODO make triggers a separate layer
   for k, v in ipairs(map.layers.Sprite.objects) do
     if v.properties.entity then
-      addEntity(v.properties.entity, v.x, v.y)
+      addEntity(v.properties.entity, v.x, v.y, v.properties)
     end
     if v.properties.entrance and v.properties.entrance == id then
       player.Transform.position = Vec2(v.x, v.y)
@@ -174,7 +176,7 @@ function Game.loadMap(level, id)
       addEntity('triggers/exit', {position = Vec2(v.x, v.y), size = Vec2(v.width, v.height), exitmap = v.properties.exitmap, exitid = v.properties.exitid})
     end
   end
-  map.layers.Sprite = nil
+  map.layers.Sprite.visible = false 
   local camera = Gamera.new(0, 0, map.width * map.tilewidth, map.height * map.tileheight)
   camera:setScale(Game.scale)
   camera:setPosition(player.Transform.position.x, player.Transform.position.y)

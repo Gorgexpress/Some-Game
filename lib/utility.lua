@@ -96,13 +96,17 @@ function Utility.bezierToMesh(curve, width)
   return trilist
 end]]
 
+--TODO this can be moved into a vertex and fragment shader, where the vertex shader gets the position and normal at sampled points
+--but getting the main game working takes priority. 
+--Vertex shader would be difficult since Love does not support geometry shaders currently. Would need to send two vertices for each point we want to sample,
+--and have a vertex attribute specify which way the vertex expands.
 function Utility.bezierToMesh(curve, width, resolution)
   local step = resolution == nil and 0.2 or (1 / resolution) --1 / step == resolution == how many points on curve to sample for vertices
   width = width / 2
   local x, y = curve:getControlPoint(1)
   local derivative = curve:getDerivative()
   --derivative:evaluate(t) is the change in direction at curve:evaluate(t)
-  --we follow the direction of the vector perpendicular to derivative:evaluate(t) to give the curve thickness
+  --we follow the direction of the vector perpendicular to derivative:evaluate(t) to get the normal
   local d = Vec2(derivative:evaluate(0)):normalize():perpendicular()
   local trilist = {}
   --first quad. We want the first and last quad to have different uvs so they are done out of the loop.

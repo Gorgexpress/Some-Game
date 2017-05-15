@@ -67,7 +67,7 @@ local function playerFilter(self, other)
     return 'cross'
   end
   
-  if other.properties or (other.Body and other.Body.type == 'bump') then 
+  if other.properties or (other.Body and (other.Body.type == 'bump' or other.Body.type == 'tile')) then 
     return 'slide'
   end
   return nil

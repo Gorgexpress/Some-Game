@@ -3,6 +3,7 @@ local Bump = require 'src/entities/enemies/bump'
 local addEntity = require('src/managers/entity').add
 
 local Entity = {}
+local Entity_mt = {}
 
 function Entity.draw(self)
   Bump.draw(self)
@@ -26,7 +27,7 @@ function Entity.update(self, dt)
   end
 end
 
-function Entity.new(x, y)
+function Entity.new(x, y, properties)
   local entity = Bump.new(x, y)
   entity.t_bomb = 0
   entity.t_between_bombs = 3

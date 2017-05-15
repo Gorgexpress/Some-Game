@@ -42,9 +42,9 @@ local function fire1(self)
   local dir = (self.target.center - center):normalize()
   local n = love.math.random()
   if n > 0.3 or self.health >= 115 then
-    rain(center.x, center.y, dir.x, dir.y, 400, {0.0, 0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 350, {0.0, 0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6})
   else
-    rain(center.x, center.y, dir.x, dir.y, 400, {0.0,0.1, 0.2, 0.3, 0.4,0.5, 0.6, 1.4, 1.5, 1.6})
+    rain(center.x, center.y, dir.x, dir.y, 350, {0.0,0.1, 0.2, 0.3, 0.4,0.5, 0.6, 1.4, 1.5, 1.6})
   end
 end
 
@@ -76,7 +76,10 @@ end
 function Entity.onCollision(self, other, type)
   if type == 'p_projectile' then
     self.health = math.max(self.health - (other.Body.damage or 0), 0) 
-    if self.health <= 0 then self.destroyed = true end
+    if self.health <= 0 then 
+      self.destroyed = true 
+      Game.Signal.emit('enemy-destroyed', self)
+    end
     if self.health <= 80 and self.count == 3 then 
       self.count = self.count * 2 
       self.think_time = self.think_time + 0.75
