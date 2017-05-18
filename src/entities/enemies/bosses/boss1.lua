@@ -5,6 +5,7 @@ local Bullet = require 'src/entities/projectiles/bullet'
 local BigLaser = require 'src/entities/projectiles/big_laser'
 local fire = require('src/projectile-spawner').fire
 local rotate = require('lib/vector-light').rotate
+local curve = require 'src/entities/projectiles/curve'
 local Timer = require 'lib/timer'
 local Entity = {}
 local Entity_mt = {}
@@ -61,6 +62,16 @@ local function fire3(self)
   local center = self.Transform.position + self.Body.size * 0.5
   local dir = (self.target.center - center):normalize()
   fire('basiclaser', center.x, center.y, dir.x * 700, dir.y * 700)
+  fire('basiclaser', center.x, center.y, dir.x * 700, -dir.y * 700)
+  dir = dir:perpendicular()
+  fire('basiclaser', center.x, center.y, dir.x * 700, dir.y * 700)
+  fire('basiclaser', center.x, center.y, -dir.x * 700, dir.y * 700)
+  local dir2 = dir:rotate(math.pi / 4)
+  fire('basiclaser', center.x, center.y, dir2.x * 700, dir2.y * 700)
+  fire('basiclaser', center.x, center.y, -dir2.x * 700, dir2.y * 700)
+  dir = dir:rotate(math.pi / -4)
+  fire('basiclaser', center.x, center.y, dir.x * 700, dir.y * 700)
+  fire('basiclaser', center.x, center.y, -dir.x * 700, dir.y * 700)
 end
 
 
@@ -94,12 +105,12 @@ function Entity.onCollision(self, other, type)
       self.flag2 = true
       self.think_time = 0.225
       self.rotspeed = self.rotspeed + 0.3
-      self.shotspeed = self.shotspeed + 150
+      self.shotspeed = self.shotspeed + 100
     elseif not self.flag3 and self.health <= 20 then
       self.flag3 = true
       self.think_time = 0.15
       self.rotspeed = self.rotspeed + 0.3
-      self.shotspeed = self.shotspeed + 150
+      self.shotspeed = self.shotspeed + 100
     --[[elseif not self.flag4 and self.health <= 15 then
       self.flag4 = true
       self.think_time = 0.1
@@ -141,14 +152,10 @@ function Entity.update(self, dt)
   end
   if self.flag1 then
     self.laser_timer1 = self.laser_timer1 - dt
-    self.laser_timer2 = self.laser_timer2 - dt
     if self.laser_timer1 <= 0 then 
       fire3(self)
+      self.Timer:after(0.75, function()fire3(self) end)
       self.laser_timer1 = 5 
-    end
-    if self.laser_timer2 <= 0 then 
-      fire3(self)
-      self.laser_timer2 = 5 
     end
   end
 end

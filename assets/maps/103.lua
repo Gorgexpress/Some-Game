@@ -59,7 +59,7 @@ return {
       properties = {},
       encoding = "base64",
       compression = "zlib",
-      data = "eJxjYWBgYBlhmIlKGGYeI5XwqHmj5o2aN2oeLc0jplyDqSdGLQBspgLJ"
+      data = "eJxjYWBgYBnFFGEmKmGYeYxUwqPmjZo3at6oecjmEVMOwdQToxYAffEC/w=="
     },
     {
       type = "objectgroup",

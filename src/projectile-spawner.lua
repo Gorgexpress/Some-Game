@@ -3,6 +3,7 @@ local Vec2l = require 'lib/vector-light'
 local Game = require 'src/game'
 local Laser = require 'src/entities/projectiles/laser'
 local Bullet = require 'src/entities/projectiles/bullet'
+local Seek = require 'src/entities/projectiles/homingp'
 local Asset = require 'src/managers/asset'
 local add, sub, mul, normalize = Vec2l.add, Vec2l.sub, Vec2l.mul, Vec2l.normalize
 local sqrt, random, rad = math.sqrt, math.random, math.rad
@@ -75,9 +76,9 @@ function _defs.basic(x, y, vx, vy)
 end
 
 local _bpurpleimage = Asset.getImage('bigpurple')
-local _bpurplequad = love.graphics.newQuad(64, 0, 32, 32, _basicimage:getDimensions())
+local _bpurplequad = love.graphics.newQuad(64, 0, 32, 32, _bpurpleimage:getDimensions())
 function _defs.bigpurple(x, y, vx, vy)
-  addEntity(Bullet.new(x, y, vx, vy, 6, 6, 12, 12, 10, _bbpurpleimage, _bpurplequad))
+  addEntity(Bullet.new(x, y, vx, vy, 6, 6, 12, 12, 10, _bpurpleimage, _bpurplequad))
 end
 
 local _abimage = Asset.getImage('bullet2')
@@ -86,6 +87,9 @@ function _defs.angledbullet(x, y, vx, vy, damage, update, properties)
   addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, damage, _abimage, _abquad, 'true', update, properties))
 end
 
+function _defs.seek(x, y, dirx, diry, damage)
+  addEntity(Seek.new(x, y, dirx, diry, 2, 2, -1, -1, damage, _bpurpleimage, _bpurplequad))
+end
 
 
 return ProjectileSpawner
