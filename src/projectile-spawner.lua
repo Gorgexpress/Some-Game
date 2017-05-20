@@ -87,8 +87,9 @@ function _defs.angledbullet(x, y, vx, vy, damage, update, properties)
   addEntity(Bullet.new(x, y, vx, vy, 3, 3, 6, 6, damage, _abimage, _abquad, 'true', update, properties))
 end
 
+local _seekquad = love.graphics.newQuad(96, 96, 32, 32, _bpurpleimage:getDimensions())
 function _defs.seek(x, y, dirx, diry, damage)
-  addEntity(Seek.new(x, y, dirx, diry, 2, 2, -1, -1, damage, _bpurpleimage, _bpurplequad))
+  addEntity(Seek.new(x, y, dirx, diry, 2, 2, -1, -1, damage, _bpurpleimage, _seekquad))
 end
 
 

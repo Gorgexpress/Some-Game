@@ -47,11 +47,11 @@ local function filter(self, other)
 end
 
 function Entity.update(self, dt)
+  local x, y = self.Transform.position:unpack()
   seek(self, dt)
   lock(self)
   self.speed = math.min(self.max_speed, self.speed + self.max_speed * dt)
-  local dimx, dimy = self.image:getDimensions()
-  self.ps:moveTo(self.Transform.position.x +16, self.Transform.position.y - 16)
+  self.ps:moveTo(self.Transform.position.x + 32, self.Transform.position.y + 32)
   self.ps:update(dt)
   self.hb_timer = self.hb_timer - dt
   if self.hb_timer <= 0 then
@@ -76,6 +76,11 @@ function Entity.update(self, dt)
       onCollision = function(self, other) if other == Game.player then self.destroyed = true end end
     })
   end
+  local l, t, w, h = Game.camera:getVisible()
+  if not self.being_destroyed and (x < l - 10 or x > l + w + 10 or y < t - 10 or y > t + h + 10) then 
+    self.being_destroyed = true
+    Timer.after(5, function() self.destroyed = true end)
+  end
 end
 
 
@@ -84,6 +89,7 @@ function Entity.new(x, y, dirx, diry, w, h, ox, oy, damage, image, quad, propert
   ps:setQuads(quad)
   ps:setParticleLifetime(0.2)
   ps:setEmissionRate(200)
+  ps:setColors(255, 255, 255, 255, 182, 1, 240, 255)
   return setmetatable({
     Transform = {
       position = Vec2(x, y),
